@@ -1,3 +1,5 @@
+import { CopyInstall } from "./components/CopyInstall";
+
 export default function Home() {
   return (
     <main className="overflow-hidden">
@@ -167,19 +169,7 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4 animate-fade-in-up delay-3">
-            <div className="install-box flex items-center gap-3 font-mono text-sm">
-              <span className="text-[var(--text-dim)]">$</span>
-              <span className="text-[var(--accent)]">npx</span>
-              <span className="text-white">pipepost-mcp</span>
-              <button
-                className="ml-2 text-[var(--text-dim)] hover:text-white transition-colors"
-                aria-label="Copy command"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                </svg>
-              </button>
-            </div>
+            <CopyInstall />
             <a
               href="https://github.com/MendleM/Pipepost"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium border border-[var(--border)] hover:border-[var(--border-light)] hover:bg-[var(--bg-card)] transition-all"
@@ -419,6 +409,48 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════ QUANTIFIED IMPACT ═══════════ */}
+      <section className="relative px-6 py-20 sm:py-24 border-t border-[var(--border)] overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "linear-gradient(180deg, transparent 0%, rgba(249,115,22,0.03) 50%, transparent 100%)",
+          }}
+        />
+        <div className="relative max-w-4xl mx-auto text-center">
+          <div className="mb-4">
+            <span className="text-7xl sm:text-8xl lg:text-9xl font-bold text-gradient font-mono leading-none">50&times;</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+            faster than the browser shuffle
+          </h2>
+          <p className="text-[var(--text-muted)] mb-12 max-w-lg mx-auto">
+            25 minutes saved per article. Every single time.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-8">
+            <div className="flex items-center gap-2.5 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-5 py-3">
+              <span className="text-2xl font-bold text-white font-mono">4</span>
+              <span className="text-sm text-[var(--text-muted)]">articles/week</span>
+            </div>
+            <span className="text-[var(--accent)] font-mono text-xl font-bold">&times;</span>
+            <div className="flex items-center gap-2.5 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-5 py-3">
+              <span className="text-2xl font-bold text-white font-mono">25</span>
+              <span className="text-sm text-[var(--text-muted)]">min saved</span>
+            </div>
+            <span className="text-[var(--accent)] font-mono text-xl font-bold">=</span>
+            <div className="flex items-center gap-2.5 bg-[var(--bg-card)] border-2 border-[var(--accent)] rounded-xl px-5 py-3 shadow-[0_0_30px_-10px_rgba(249,115,22,0.2)]">
+              <span className="text-2xl font-bold text-[var(--accent)] font-mono">100</span>
+              <span className="text-sm text-[var(--text-muted)]">min back/week</span>
+            </div>
+          </div>
+
+          <p className="text-sm text-[var(--text-dim)]">
+            That&apos;s two extra articles per week. Or an early lunch. Your call.
+          </p>
+        </div>
+      </section>
+
       {/* ═══════════ HOW IT WORKS ═══════════ */}
       <section id="how-it-works" className="relative px-6 py-24 sm:py-32 border-t border-[var(--border)]">
         <div className="max-w-5xl mx-auto">
@@ -497,6 +529,32 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════ MID-PAGE CTA ═══════════ */}
+      <section className="relative px-6 py-16 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[rgba(249,115,22,0.06)] to-transparent" />
+        <div className="absolute inset-0 border-y border-[rgba(249,115,22,0.1)]" />
+        <div className="relative max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+            Ready to <span className="font-serif italic text-gradient">ship faster?</span>
+          </h2>
+          <p className="text-[var(--text-muted)] mb-8">
+            Install in 30 seconds. Your first three publishes are free.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <CopyInstall />
+            <a
+              href="https://pipepost.lemonsqueezy.com/checkout/buy/c9bcb420-ea9d-4ba7-b9c2-2305b6e3e06d"
+              className="btn-accent px-6 py-3.5 rounded-xl text-sm font-bold inline-flex items-center gap-2"
+            >
+              Get Pro &mdash; $19/mo
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════ PRICING ═══════════ */}
       <section id="pricing" className="relative px-6 py-24 sm:py-32 border-t border-[var(--border)]">
         <div
@@ -512,9 +570,15 @@ export default function Home() {
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
               Start free. <span className="font-serif italic text-gradient">Scale when ready.</span>
             </h2>
-            <p className="text-[var(--text-muted)] max-w-md mx-auto">
+            <p className="text-[var(--text-muted)] max-w-md mx-auto mb-6">
               The free tier is real — publish 3 articles a month to Dev.to with SEO scoring. No tricks.
             </p>
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl px-6 py-3 text-sm inline-block">
+              <span className="text-[var(--text-dim)]">25 min &times; $50/hr = </span>
+              <span className="text-white font-semibold">$20.83 wasted</span>
+              <span className="text-[var(--text-dim)]"> per article. </span>
+              <span className="text-[var(--accent)] font-semibold">Pro pays for itself on publish&nbsp;#1.</span>
+            </div>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -583,6 +647,30 @@ export default function Home() {
               </a>
             </div>
           </div>
+
+          {/* Risk reversal */}
+          <div className="flex items-center justify-center gap-6 mt-10 text-xs text-[var(--text-dim)]">
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              No contracts
+            </div>
+            <span className="text-[var(--border)]">|</span>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+              Cancel anytime
+            </div>
+            <span className="text-[var(--border)]">|</span>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Free tier forever
+            </div>
+          </div>
         </div>
       </section>
 
@@ -601,13 +689,7 @@ export default function Home() {
               <div className="pipeline-number mt-1">1</div>
               <div className="flex-1">
                 <p className="text-sm font-semibold mb-2">Install</p>
-                <div className="terminal rounded-xl">
-                  <div className="terminal-body py-3 px-4 text-[13px]">
-                    <span className="text-[var(--text-dim)]">$</span>{" "}
-                    <span className="text-[var(--accent)]">npx</span>{" "}
-                    <span className="text-white">pipepost-mcp</span>
-                  </div>
-                </div>
+                <CopyInstall compact />
               </div>
             </div>
 
@@ -724,19 +806,90 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════ ECOSYSTEM BAR ═══════════ */}
+      <section className="px-6 py-14 border-t border-[var(--border)]">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-xs text-[var(--text-dim)] uppercase tracking-widest font-mono mb-8">Works with &middot; More platforms coming</p>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+            {[
+              { name: "Claude Code", active: true },
+              { name: "Dev.to", active: true },
+              { name: "Ghost", active: false },
+              { name: "Hashnode", active: false },
+              { name: "WordPress", active: false },
+              { name: "Medium", active: false },
+            ].map(({ name, active }) => (
+              <div
+                key={name}
+                className={`flex items-center gap-2 text-sm font-medium ${
+                  active ? "text-white" : "text-[var(--text-dim)] opacity-50"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${active ? "bg-[#22C55E]" : "bg-[var(--border)]"}`} />
+                {name}
+                {!active && <span className="text-[10px] text-[var(--text-dim)] font-mono">soon</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ FINAL CTA ═══════════ */}
+      <section className="relative px-6 py-20 border-t border-[var(--border)] overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at 50% 100%, rgba(249,115,22,0.06) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+            Stop context-switching.<br />
+            <span className="font-serif italic text-gradient">Start shipping.</span>
+          </h2>
+          <p className="text-[var(--text-muted)] mb-8">
+            Join developers who publish content without leaving their terminal.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <CopyInstall />
+            <a
+              href="https://pipepost.lemonsqueezy.com/checkout/buy/c9bcb420-ea9d-4ba7-b9c2-2305b6e3e06d"
+              className="btn-accent px-8 py-3.5 rounded-xl text-sm font-bold inline-flex items-center gap-2"
+            >
+              Get Pro &mdash; $19/mo
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════ FOOTER ═══════════ */}
       <footer className="px-6 py-10 border-t border-[var(--border)]">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-[var(--text-dim)]">
-          <div className="flex items-center gap-2.5">
-            <span className="font-mono text-[var(--accent)] font-bold text-lg">|&gt;</span>
-            <span className="font-semibold text-white text-sm">pipepost</span>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-[var(--text-dim)]">
+            <div className="flex items-center gap-2.5">
+              <span className="font-mono text-[var(--accent)] font-bold text-lg">|&gt;</span>
+              <span className="font-semibold text-white text-sm">pipepost</span>
+            </div>
+            <div className="flex items-center gap-8">
+              <a href="https://github.com/MendleM/Pipepost" className="hover:text-white transition-colors">GitHub</a>
+              <a href="https://npmjs.com/package/pipepost-mcp" className="hover:text-white transition-colors">npm</a>
+              <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+              <a href="#how-it-works" className="hover:text-white transition-colors">Docs</a>
+            </div>
           </div>
-          <div className="flex items-center gap-8">
-            <a href="https://github.com/MendleM/Pipepost" className="hover:text-white transition-colors">GitHub</a>
-            <a href="https://npmjs.com/package/pipepost-mcp" className="hover:text-white transition-colors">npm</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+          <div className="mt-6 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-dim)]">
+            <p>&copy; 2026 Pipepost. Open source under MIT License.</p>
+            <p>
+              Built for developers who write. Powered by{" "}
+              <a href="https://modelcontextprotocol.io" className="text-[var(--text-muted)] hover:text-white transition-colors">
+                Model Context Protocol
+              </a>
+              .
+            </p>
           </div>
-          <p className="text-xs">&copy; 2026 Pipepost</p>
         </div>
       </footer>
     </main>
