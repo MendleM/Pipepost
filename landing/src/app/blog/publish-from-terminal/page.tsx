@@ -30,6 +30,36 @@ export const metadata: Metadata = {
 export default function Article() {
   return (
     <main className="overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline:
+              "I Built an MCP Server That Lets You Publish Blog Posts from Your Terminal",
+            description:
+              "How I built Pipepost, an open-source MCP server that adds SEO scoring and publishing to Claude Code.",
+            datePublished: "2026-04-14T00:00:00Z",
+            dateModified: "2026-04-14T00:00:00Z",
+            wordCount: 1300,
+            author: {
+              "@type": "Organization",
+              name: "Pipepost",
+              url: "https://pipepost.dev",
+            },
+            publisher: {
+              "@type": "Organization",
+              name: "Pipepost",
+              url: "https://pipepost.dev",
+            },
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": "https://pipepost.dev/blog/publish-from-terminal",
+            },
+          }),
+        }}
+      />
       <div className="grain" />
 
       {/* Nav */}

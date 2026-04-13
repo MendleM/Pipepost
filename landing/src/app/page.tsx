@@ -109,6 +109,7 @@ export default function Home() {
           </a>
           <div className="hidden sm:flex items-center gap-8 text-sm text-[var(--text-muted)]">
             <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
+            <a href="/tools" className="hover:text-white transition-colors">Tools</a>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
             <a href="https://github.com/MendleM/Pipepost" className="hover:text-white transition-colors">GitHub</a>
           </div>
@@ -877,7 +878,7 @@ export default function Home() {
               <a href="https://github.com/MendleM/Pipepost" className="hover:text-white transition-colors">GitHub</a>
               <a href="https://npmjs.com/package/pipepost-mcp" className="hover:text-white transition-colors">npm</a>
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-              <a href="#how-it-works" className="hover:text-white transition-colors">Docs</a>
+              <a href="/tools" className="hover:text-white transition-colors">Tools</a>
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-dim)]">

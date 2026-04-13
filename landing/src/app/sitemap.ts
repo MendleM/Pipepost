@@ -9,6 +9,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: 'https://pipepost.dev/tools',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: 'https://pipepost.dev/blog/publish-from-terminal',
       lastModified: new Date('2026-04-14'),
       changeFrequency: 'monthly',
