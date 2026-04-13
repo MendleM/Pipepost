@@ -3,7 +3,7 @@ import { publishToDevto, listDevtoPosts } from "../publish/devto.js";
 import { appendBadge } from "../publish/badge.js";
 import { readConfig } from "../config.js";
 import { checkTier, canPublish, recordPublish } from "../tier.js";
-import { makeError, makeSuccess } from "../errors.js";
+import { makeError } from "../errors.js";
 import {
   validateRequired,
   validatePlatform,

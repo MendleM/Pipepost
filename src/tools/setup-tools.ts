@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { readConfig, writeConfig } from "../config.js";
-import { activateLicense, validateLicense } from "../license.js";
+import { activateLicense } from "../license.js";
 import { canPublish, checkTier } from "../tier.js";
 import { makeError, makeSuccess } from "../errors.js";
 
