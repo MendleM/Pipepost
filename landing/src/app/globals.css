@@ -295,6 +295,73 @@ code, pre, .font-mono {
   box-shadow: 0 0 40px -10px var(--accent-glow);
 }
 
+/* ── Article prose ── */
+.prose-custom {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.prose-custom h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 2.5rem 0 1rem;
+  letter-spacing: -0.02em;
+}
+
+.prose-custom h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 2rem 0 0.75rem;
+}
+
+.prose-custom p {
+  margin: 0 0 1.25rem;
+}
+
+.prose-custom a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.prose-custom a:hover {
+  text-decoration: underline;
+}
+
+.prose-custom code {
+  font-size: 0.85em;
+  background: var(--bg-elevated);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  color: var(--accent-light);
+}
+
+.prose-custom strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prose-custom em {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.1em;
+  color: var(--text);
+}
+
+.prose-custom ul {
+  margin: 0 0 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.prose-custom li {
+  margin: 0.4rem 0;
+}
+
+.prose-custom li::marker {
+  color: var(--accent);
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
