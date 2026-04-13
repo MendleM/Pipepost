@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.local
+coverage/
+*.tgz
+landing/.next/
+landing/node_modules/
+landing/.vercel/
