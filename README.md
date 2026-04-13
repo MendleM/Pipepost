@@ -4,6 +4,8 @@
 
 Pipepost is an MCP server that turns Claude Code into a content studio. Write, optimize, and publish — without leaving your terminal.
 
+**[pipepost.dev](https://pipepost.dev)** | **[Tools Reference](https://pipepost.dev/tools)** | **[npm](https://npmjs.com/package/pipepost-mcp)**
+
 ## Quick Start
 
 ```bash
