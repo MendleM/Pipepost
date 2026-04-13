@@ -26,7 +26,7 @@ export default function Home() {
 
         <div className="flex gap-4">
           <a
-            href="https://github.com/pipepost/pipepost"
+            href="https://github.com/MendleM/Pipepost"
             className="inline-flex items-center px-5 py-2.5 bg-[#0F172A] text-white rounded-lg text-sm font-medium hover:bg-[#1e293b] transition-colors"
           >
             View on GitHub
@@ -167,7 +167,7 @@ export default function Home() {
             <span className="font-medium text-[#0F172A]">pipepost</span>
           </div>
           <div className="flex gap-6">
-            <a href="https://github.com/pipepost/pipepost" className="hover:text-[#0F172A] transition-colors">GitHub</a>
+            <a href="https://github.com/MendleM/Pipepost" className="hover:text-[#0F172A] transition-colors">GitHub</a>
             <a href="https://npmjs.com/package/pipepost-mcp" className="hover:text-[#0F172A] transition-colors">npm</a>
           </div>
         </div>
