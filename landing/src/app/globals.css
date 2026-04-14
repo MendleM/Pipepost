@@ -367,3 +367,63 @@ code, pre, .font-mono {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* ── Platform icon depth effects ── */
+.icon-glow {
+  filter: drop-shadow(0 14px 28px var(--glow-color));
+  transition: filter 0.5s ease, transform 0.5s cubic-bezier(0.2, 0, 0, 1);
+  transform: perspective(800px) rotateX(3deg) rotateY(-1.5deg);
+  cursor: pointer;
+}
+
+.icon-glow:hover {
+  filter: drop-shadow(0 20px 44px var(--glow-hover));
+  transform: perspective(800px) rotateX(0deg) rotateY(0deg) translateY(-6px) scale(1.05);
+}
+
+.icon-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.icon-gloss {
+  position: absolute;
+  top: -25%;
+  left: -15%;
+  width: 130%;
+  height: 60%;
+  background: radial-gradient(ellipse at 38% 55%, rgba(255,255,255,0.2), rgba(255,255,255,0.05) 45%, transparent 65%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.icon-inner-shadow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(to top, rgba(0,0,0,0.15), transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.icon-shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.05) 46%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 54%, transparent 65%);
+  background-size: 300% 100%;
+  animation: shimmer 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -100% 0; }
+}
