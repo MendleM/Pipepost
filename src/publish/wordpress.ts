@@ -20,7 +20,14 @@ function basicAuth(username: string, password: string): string {
   return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
 }
 
-/** Publish a post to WordPress via the WP REST API using Basic Auth. */
+/**
+ * Publish a post to WordPress via the WP REST API using Basic Auth.
+ *
+ * Note: WordPress does not natively support canonical_url in the REST API.
+ * If a canonical_url is provided, it is stored in the `pipepost_canonical_url`
+ * post meta field. SEO plugins (Yoast, RankMath) can pick this up, or a theme
+ * can render it. The canonical_url is also returned in the response for reference.
+ */
 export async function publishToWordpress(
   input: WordpressPublishInput,
   creds: WordpressCreds
@@ -35,6 +42,7 @@ export async function publishToWordpress(
         content: input.content,
         status: input.status === "published" ? "publish" : "draft",
         ...(input.tags && { tags_input: input.tags.join(",") }),
+        ...(input.canonical_url && { meta: { pipepost_canonical_url: input.canonical_url } }),
       },
     }
   );

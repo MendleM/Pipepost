@@ -29,6 +29,9 @@ MCP server that turns Claude Code into a complete content publishing pipeline �
 | Cover images | Browse Unsplash, download, upload, add attribution | *"Find a cover image for this article"* |
 | Search indexing | Wait days for crawlers to find your content | *"Submit this URL to IndexNow"* |
 | Content analytics | Log into 5 dashboards, compare manually | *"Show my analytics across all platforms"* |
+| Pre-publish QA | Manually check links, readability, structure | *"Audit this article and check all links"* |
+| Draft management | Copy between editors, lose track of versions | *"Save this as a draft targeting Dev.to and Ghost"* |
+| Canonical URLs | Manually set on each platform after cross-posting | Automatic — first platform URL wired to all others |
 
 ## Quick Start
 
@@ -69,8 +72,24 @@ That's it. Try asking Claude:
 | Tool | Description | Cost |
 |------|-------------|------|
 | `publish` | Publish to Dev.to, Ghost, Hashnode, WordPress, or Medium | 1 credit |
-| `cross_publish` | Publish to multiple platforms in a single call | 1 credit |
+| `cross_publish` | Publish to multiple platforms with automatic canonical URL wiring | 1 credit |
 | `list_posts` | List published and draft posts from any platform | Free |
+
+### Drafts (4 tools)
+
+| Tool | Description | Cost |
+|------|-------------|------|
+| `save_draft` | Save content as a local draft for later publishing | Free |
+| `list_drafts` | List all saved drafts with status, platforms, and dates | Free |
+| `get_draft` | Retrieve a saved draft by ID | Free |
+| `delete_draft` | Delete a saved draft by ID | Free |
+
+### Content Quality (2 tools)
+
+| Tool | Description | Cost |
+|------|-------------|------|
+| `content_audit` | Audit markdown for quality issues — readability, structure, heading hierarchy | Free (basic) / Credits (full) |
+| `check_links` | Validate all URLs in markdown — reports broken, redirected, and timed-out links | Free |
 
 ### Content Repurposing (2 tools)
 

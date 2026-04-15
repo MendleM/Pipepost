@@ -284,6 +284,193 @@ describe("handleCrossPublish", () => {
       expect(result.error.code).toBe("VALIDATION_ERROR");
     }
   });
+
+  // ── Canonical URL auto-wiring ──
+
+  it("auto-wires first platform URL as canonical_url to subsequent platforms", async () => {
+    mockedUseCredit.mockReturnValue({ success: true, remaining: 4 });
+    mockedReadConfig.mockReturnValue({
+      platforms: {
+        devto: { api_key: "dk" },
+        ghost: { url: "https://ghost.example.com", admin_key: "id:secret" },
+        hashnode: { token: "ht", publication_id: "pid" },
+      },
+    });
+
+    mockedPublishToDevto.mockResolvedValue({
+      success: true,
+      data: { post_id: "1", url: "https://dev.to/my-article", platform: "devto" },
+    });
+    mockedPublishToGhost.mockResolvedValue({
+      success: true,
+      data: { post_id: "2", url: "https://ghost.example.com/my-article", platform: "ghost" },
+    });
+    mockedPublishToHashnode.mockResolvedValue({
+      success: true,
+      data: { post_id: "3", url: "https://hashnode.com/my-article", platform: "hashnode" },
+    });
+
+    const result = await handleCrossPublish({
+      platforms: ["devto", "ghost", "hashnode"],
+      title: "Canonical Test",
+      content: "Some content.",
+      status: "draft",
+    });
+
+    // First platform (devto) should NOT receive a canonical_url
+    expect(mockedPublishToDevto).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: undefined }),
+      "dk"
+    );
+
+    // Subsequent platforms should receive the first platform's URL as canonical_url
+    expect(mockedPublishToGhost).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: "https://dev.to/my-article" }),
+      expect.any(Object)
+    );
+    expect(mockedPublishToHashnode).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: "https://dev.to/my-article" }),
+      expect.any(Object)
+    );
+
+    // Response should indicate canonical source
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const data = result.data as { summary: string; results: Array<{ canonical_source?: boolean }> };
+      expect(data.summary).toContain("Canonical URL sourced from devto");
+      expect(data.results[0].canonical_source).toBe(true);
+    }
+  });
+
+  it("does not override user-provided canonical_url", async () => {
+    mockedUseCredit.mockReturnValue({ success: true, remaining: 4 });
+    mockedReadConfig.mockReturnValue({
+      platforms: {
+        devto: { api_key: "dk" },
+        ghost: { url: "https://ghost.example.com", admin_key: "id:secret" },
+      },
+    });
+
+    mockedPublishToDevto.mockResolvedValue({
+      success: true,
+      data: { post_id: "1", url: "https://dev.to/my-article", platform: "devto" },
+    });
+    mockedPublishToGhost.mockResolvedValue({
+      success: true,
+      data: { post_id: "2", url: "https://ghost.example.com/my-article", platform: "ghost" },
+    });
+
+    const userCanonical = "https://myblog.com/original-article";
+    const result = await handleCrossPublish({
+      platforms: ["devto", "ghost"],
+      title: "Canonical Override Test",
+      content: "Some content.",
+      status: "draft",
+      canonical_url: userCanonical,
+    });
+
+    // Both platforms should use the user-provided canonical_url, not the auto-wired one
+    expect(mockedPublishToDevto).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: userCanonical }),
+      "dk"
+    );
+    expect(mockedPublishToGhost).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: userCanonical }),
+      expect.any(Object)
+    );
+
+    // Response should indicate user-provided canonical
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const data = result.data as { summary: string };
+      expect(data.summary).toContain("User-provided canonical URL applied");
+    }
+  });
+
+  it("uses primary_platform as canonical source when specified", async () => {
+    mockedUseCredit.mockReturnValue({ success: true, remaining: 4 });
+    mockedReadConfig.mockReturnValue({
+      platforms: {
+        devto: { api_key: "dk" },
+        ghost: { url: "https://ghost.example.com", admin_key: "id:secret" },
+        hashnode: { token: "ht", publication_id: "pid" },
+      },
+    });
+
+    mockedPublishToGhost.mockResolvedValue({
+      success: true,
+      data: { post_id: "2", url: "https://ghost.example.com/my-article", platform: "ghost" },
+    });
+    mockedPublishToDevto.mockResolvedValue({
+      success: true,
+      data: { post_id: "1", url: "https://dev.to/my-article", platform: "devto" },
+    });
+    mockedPublishToHashnode.mockResolvedValue({
+      success: true,
+      data: { post_id: "3", url: "https://hashnode.com/my-article", platform: "hashnode" },
+    });
+
+    const result = await handleCrossPublish({
+      platforms: ["devto", "ghost", "hashnode"],
+      title: "Primary Platform Test",
+      content: "Some content.",
+      status: "draft",
+      primary_platform: "ghost",
+    });
+
+    // Ghost should be published first (as primary) and NOT receive canonical_url
+    expect(mockedPublishToGhost).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: undefined }),
+      expect.any(Object)
+    );
+
+    // devto and hashnode should receive Ghost's URL as canonical
+    expect(mockedPublishToDevto).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: "https://ghost.example.com/my-article" }),
+      "dk"
+    );
+    expect(mockedPublishToHashnode).toHaveBeenCalledWith(
+      expect.objectContaining({ canonical_url: "https://ghost.example.com/my-article" }),
+      expect.any(Object)
+    );
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const data = result.data as { summary: string };
+      expect(data.summary).toContain("Canonical URL sourced from ghost");
+    }
+  });
+
+  it("still publishes subsequent platforms when primary platform fails (no canonical wiring)", async () => {
+    mockedUseCredit.mockReturnValue({ success: true, remaining: 4 });
+    mockedReadConfig.mockReturnValue({
+      platforms: {
+        ghost: { url: "https://ghost.example.com", admin_key: "id:secret" },
+      },
+    });
+
+    // devto not configured — will fail
+    mockedPublishToGhost.mockResolvedValue({
+      success: true,
+      data: { post_id: "2", url: "https://ghost.example.com/my-article", platform: "ghost" },
+    });
+
+    const result = await handleCrossPublish({
+      platforms: ["devto", "ghost"],
+      title: "Fallback Test",
+      content: "Some content.",
+      status: "draft",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const data = result.data as { summary: string; results: Array<{ platform: string; success: boolean }> };
+      expect(data.results).toHaveLength(2);
+      // devto failed, ghost succeeded
+      expect(data.results.find((r) => r.platform === "devto")?.success).toBe(false);
+      expect(data.results.find((r) => r.platform === "ghost")?.success).toBe(true);
+    }
+  });
 });
 
 // ── handleListPosts ──

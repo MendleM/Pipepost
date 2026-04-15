@@ -216,10 +216,16 @@ export const crossPublishSchema = z.object({
   featured_image_url: z.string().optional().describe("Featured image URL"),
   canonical_url: z.string().optional().describe("Canonical URL for cross-posting"),
   series: z.string().optional().describe("Series name (supported on Dev.to and Hashnode)"),
+  primary_platform: z.string().optional().describe("Platform to treat as canonical source. Its published URL becomes the canonical_url for all other platforms. Defaults to the first platform in the list."),
 });
 
 /**
  * Publish to multiple platforms in one call, consuming only a single credit.
+ *
+ * The first platform (or `primary_platform` if specified) is published first
+ * and its URL becomes the `canonical_url` for all subsequent platforms. This
+ * automatic canonical-URL wiring prevents duplicate-content SEO penalties when
+ * cross-posting. A user-provided `canonical_url` is never overridden.
  *
  * Each platform publish is attempted independently; partial failures are
  * reported in the results array. If all platforms fail, the credit is refunded.
@@ -235,19 +241,41 @@ export async function handleCrossPublish(input: z.infer<typeof crossPublishSchem
     return makeError("PUBLISH_LIMIT", "No credits remaining. Purchase more at pipepost.dev or wait for monthly free credits to reset.");
   }
 
-  const results: { platform: string; success: boolean; url?: string; error?: string }[] = [];
+  // Determine platform ordering: primary platform goes first so we can
+  // capture its URL for canonical wiring.
+  const primaryPlatform = input.primary_platform || input.platforms[0];
+  const orderedPlatforms = input.platforms.includes(primaryPlatform)
+    ? [primaryPlatform, ...input.platforms.filter((p) => p !== primaryPlatform)]
+    : input.platforms; // primary_platform not in list — fall back to original order
 
-  for (const platform of input.platforms) {
+  const results: { platform: string; success: boolean; url?: string; error?: string; canonical_source?: boolean }[] = [];
+  let canonicalUrl: string | undefined = input.canonical_url;
+  let canonicalSourcePlatform: string | undefined;
+
+  for (const platform of orderedPlatforms) {
     const result = await dispatchPublish({
       ...input,
       platform,
+      // For subsequent platforms, auto-set canonical_url to the primary's URL
+      // only when the user hasn't provided their own canonical_url.
+      canonical_url: canonicalUrl,
     });
 
     if (result.success) {
       const data = result.data as { url?: string };
-      results.push({ platform, success: true, url: data.url });
+      const isCanonicalSource = !canonicalUrl && data.url;
+      results.push({ platform, success: true, url: data.url, ...(isCanonicalSource ? { canonical_source: true } : {}) });
+
+      // After the first successful publish, capture the URL for subsequent platforms.
+      if (!canonicalUrl && data.url) {
+        canonicalUrl = data.url;
+        canonicalSourcePlatform = platform;
+      }
     } else {
       results.push({ platform, success: false, error: result.error.message });
+
+      // If the primary platform failed, subsequent platforms won't get
+      // auto-wired canonical URLs — but they'll still publish normally.
     }
   }
 
@@ -263,8 +291,14 @@ export async function handleCrossPublish(input: z.infer<typeof crossPublishSchem
     });
   }
 
+  const canonicalNote = canonicalSourcePlatform
+    ? ` Canonical URL sourced from ${canonicalSourcePlatform}.`
+    : input.canonical_url
+      ? " User-provided canonical URL applied to all platforms."
+      : "";
+
   return makeSuccess({
-    summary: `Published to ${succeeded}/${results.length} platforms${failed > 0 ? ` (${failed} failed)` : ""}`,
+    summary: `Published to ${succeeded}/${results.length} platforms${failed > 0 ? ` (${failed} failed)` : ""}.${canonicalNote}`,
     results,
   });
 }

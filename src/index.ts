@@ -40,6 +40,21 @@ import {
   analyticsSchema, handleAnalytics,
 } from "./tools/analytics-tools.js";
 
+import {
+  saveDraftSchema, handleSaveDraft,
+  listDraftsSchema, handleListDrafts,
+  getDraftSchema, handleGetDraft,
+  deleteDraftSchema, handleDeleteDraft,
+} from "./tools/draft-tools.js";
+
+import {
+  contentAuditSchema, handleContentAudit,
+} from "./tools/audit-tools.js";
+
+import {
+  checkLinksSchema, handleCheckLinks,
+} from "./tools/link-tools.js";
+
 import { formatToolResponse } from "./format-response.js";
 import {
   formatPublish,
@@ -59,9 +74,21 @@ import {
   formatActivate,
 } from "./format-response.js";
 
+import {
+  formatSaveDraft,
+  formatListDrafts,
+  formatGetDraft,
+  formatDeleteDraft,
+} from "./drafts/format.js";
+
+import {
+  formatContentAudit,
+  formatLinkCheck,
+} from "./audit/format.js";
+
 const server = new McpServer({
   name: "pipepost",
-  version: "0.4.0",
+  version: "0.5.0",
 });
 
 // SEO Tools
@@ -159,6 +186,44 @@ server.tool("activate", "Activate a Pipepost credit pack license key", activateS
 server.tool("status", "Show current Pipepost configuration and credit balance", {}, async () => {
   const result = await handleStatus();
   return { content: [{ type: "text", text: formatToolResponse("status", result, formatStatus) }] };
+});
+
+// Draft Tools (free)
+server.tool("save_draft", "Save content as a local draft for later publishing — FREE", saveDraftSchema.shape, async (input) => {
+  const parsed = saveDraftSchema.parse(input);
+  const result = await handleSaveDraft(parsed);
+  return { content: [{ type: "text", text: formatToolResponse("save_draft", result, formatSaveDraft) }] };
+});
+
+server.tool("list_drafts", "List all saved drafts with status, platforms, and dates — FREE", listDraftsSchema.shape, async (input) => {
+  const parsed = listDraftsSchema.parse(input);
+  const result = await handleListDrafts(parsed);
+  return { content: [{ type: "text", text: formatToolResponse("list_drafts", result, formatListDrafts) }] };
+});
+
+server.tool("get_draft", "Retrieve a saved draft by ID — FREE", getDraftSchema.shape, async (input) => {
+  const parsed = getDraftSchema.parse(input);
+  const result = await handleGetDraft(parsed);
+  return { content: [{ type: "text", text: formatToolResponse("get_draft", result, formatGetDraft) }] };
+});
+
+server.tool("delete_draft", "Delete a saved draft by ID — FREE", deleteDraftSchema.shape, async (input) => {
+  const parsed = deleteDraftSchema.parse(input);
+  const result = await handleDeleteDraft(parsed);
+  return { content: [{ type: "text", text: formatToolResponse("delete_draft", result, formatDeleteDraft) }] };
+});
+
+// Content Quality Tools
+server.tool("content_audit", "Audit markdown for quality issues before publishing — basic FREE, full analysis requires credits", contentAuditSchema.shape, async (input) => {
+  const parsed = contentAuditSchema.parse(input);
+  const result = await handleContentAudit(parsed);
+  return { content: [{ type: "text", text: formatToolResponse("content_audit", result, formatContentAudit) }] };
+});
+
+server.tool("check_links", "Validate all URLs in markdown content — reports broken, redirected, and timed-out links — FREE", checkLinksSchema.shape, async (input) => {
+  const parsed = checkLinksSchema.parse(input);
+  const result = await handleCheckLinks(parsed);
+  return { content: [{ type: "text", text: formatToolResponse("check_links", result, formatLinkCheck) }] };
 });
 
 async function main() {
