@@ -251,32 +251,35 @@ describe("searchBlueskyPosts", () => {
   }
 
   it("rejects empty query without hitting the network", async () => {
-    const result = await searchBlueskyPosts("   ");
+    const result = await searchBlueskyPosts("   ", creds);
     expect(result.success).toBe(false);
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("defaults to latest sort with limit 25 and no auth", async () => {
+  it("authenticates and defaults to latest sort, limit 25, against bsky.social", async () => {
+    mockSession();
     mockSearch([]);
 
-    await searchBlueskyPosts("claude code");
+    await searchBlueskyPosts("claude code", creds);
 
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    const url = mockFetch.mock.calls[0][0] as string;
-    const opts = mockFetch.mock.calls[0][1] as { headers?: Record<string, string> };
-    expect(url).toContain("public.api.bsky.app");
+    // Session roundtrip + search = 2 calls.
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    const url = mockFetch.mock.calls[1][0] as string;
+    const opts = mockFetch.mock.calls[1][1] as { headers?: Record<string, string> };
+    expect(url).toContain("bsky.social");
     expect(url).toContain("searchPosts");
     expect(url).toContain("q=claude+code");
     expect(url).toContain("limit=25");
     expect(url).toContain("sort=latest");
-    // No Authorization header — we hit the public AppView.
-    expect(opts.headers?.Authorization).toBeUndefined();
+    // Authenticated — the public AppView 403s unauthenticated searchPosts.
+    expect(opts.headers?.Authorization).toContain("Bearer");
   });
 
   it("forwards all optional filters as query params", async () => {
+    mockSession();
     mockSearch([]);
 
-    await searchBlueskyPosts("mcp", {
+    await searchBlueskyPosts("mcp", creds, {
       limit: 100,
       cursor: "c1",
       sort: "top",
@@ -287,7 +290,7 @@ describe("searchBlueskyPosts", () => {
       tag: ["ai", "typescript"],
     });
 
-    const url = mockFetch.mock.calls[0][0] as string;
+    const url = mockFetch.mock.calls[1][0] as string;
     expect(url).toContain("limit=100");
     expect(url).toContain("cursor=c1");
     expect(url).toContain("sort=top");
@@ -300,6 +303,7 @@ describe("searchBlueskyPosts", () => {
   });
 
   it("flattens AT responses into search hits with public URLs", async () => {
+    mockSession();
     mockSearch(
       [
         {
@@ -315,7 +319,7 @@ describe("searchBlueskyPosts", () => {
       "next"
     );
 
-    const result = await searchBlueskyPosts("mcp");
+    const result = await searchBlueskyPosts("mcp", creds);
 
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -329,6 +333,7 @@ describe("searchBlueskyPosts", () => {
   });
 
   it("defaults missing reply/like counts to zero", async () => {
+    mockSession();
     mockSearch([
       {
         uri: "at://did:plc:xyz/app.bsky.feed.post/abc",
@@ -339,12 +344,26 @@ describe("searchBlueskyPosts", () => {
       },
     ]);
 
-    const result = await searchBlueskyPosts("mcp");
+    const result = await searchBlueskyPosts("mcp", creds);
 
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data.posts[0].replyCount).toBe(0);
     expect(result.data.posts[0].likeCount).toBe(0);
+  });
+
+  it("surfaces auth failure from createSession", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      text: async () => "bad password",
+    });
+
+    const result = await searchBlueskyPosts("mcp", creds);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("AUTH_FAILED");
   });
 });
 

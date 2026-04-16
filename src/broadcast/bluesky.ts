@@ -380,9 +380,12 @@ export async function listBlueskyMentions(
 }
 
 /**
- * Search public Bluesky posts. Hits the unauthenticated AppView since search
- * results are public anyway — skipping the session roundtrip keeps this
- * fast enough to call repeatedly against a rotating list of watched queries.
+ * Search public Bluesky posts.
+ *
+ * Bluesky restricts `searchPosts` on the public AppView (BunnyCDN 403s
+ * unauthenticated requests to prevent scraping abuse), so this call must
+ * go through an authenticated session against `bsky.social`. Credentials
+ * are required — same app password used for posting.
  *
  * `mentions` filter is useful for "who's talking about us" queries, and
  * `author` filter for "what has this person said recently." `sort: latest`
@@ -390,6 +393,7 @@ export async function listBlueskyMentions(
  */
 export async function searchBlueskyPosts(
   query: string,
+  credentials: BlueskyCredentials,
   options?: {
     limit?: number;
     cursor?: string;
@@ -405,6 +409,9 @@ export async function searchBlueskyPosts(
     return makeError("VALIDATION_ERROR", "Search query cannot be empty");
   }
 
+  const session = await createSession(credentials);
+  if (!session.success) return session;
+
   const limit = Math.min(Math.max(options?.limit ?? 25, 1), 100);
   const params = new URLSearchParams();
   params.set("q", query);
@@ -418,8 +425,11 @@ export async function searchBlueskyPosts(
   if (options?.tag) for (const t of options.tag) params.append("tag", t);
 
   const result = await httpRequest(
-    `${PUBLIC_APPVIEW}/xrpc/app.bsky.feed.searchPosts?${params.toString()}`,
-    { method: "GET" }
+    `${BLUESKY_HOST}/xrpc/app.bsky.feed.searchPosts?${params.toString()}`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${session.data.accessJwt}` },
+    }
   );
 
   if (!result.success) {

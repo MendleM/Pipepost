@@ -284,20 +284,20 @@ describe("handleBlueskyMentions", () => {
 });
 
 describe("handleBlueskySearch", () => {
-  it("requires no auth — runs even with empty config", async () => {
+  it("fails when Bluesky not configured — search now requires auth", async () => {
     mockedReadConfig.mockReturnValue({});
-    mockedSearchPosts.mockResolvedValue({
-      success: true,
-      data: { posts: [], cursor: undefined },
-    });
 
     const result = await handleBlueskySearch({ query: "mcp" });
 
-    expect(result.success).toBe(true);
-    expect(mockedSearchPosts).toHaveBeenCalled();
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("AUTH_FAILED");
+    expect(result.error.message).toContain("unauthenticated");
+    expect(mockedSearchPosts).not.toHaveBeenCalled();
   });
 
-  it("forwards every optional filter to the client", async () => {
+  it("forwards every optional filter to the client with credentials", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
     mockedSearchPosts.mockResolvedValue({
       success: true,
       data: { posts: [], cursor: undefined },
@@ -315,16 +315,20 @@ describe("handleBlueskySearch", () => {
       tag: ["ai"],
     });
 
-    expect(mockedSearchPosts).toHaveBeenCalledWith("claude code", {
-      limit: 5,
-      cursor: "c1",
-      sort: "top",
-      since: "2026-04-01",
-      mentions: "pipepost.bsky.social",
-      author: "someone.bsky.social",
-      lang: "en",
-      tag: ["ai"],
-    });
+    expect(mockedSearchPosts).toHaveBeenCalledWith(
+      "claude code",
+      blueskyCreds.social.bluesky,
+      {
+        limit: 5,
+        cursor: "c1",
+        sort: "top",
+        since: "2026-04-01",
+        mentions: "pipepost.bsky.social",
+        author: "someone.bsky.social",
+        lang: "en",
+        tag: ["ai"],
+      }
+    );
   });
 });
 

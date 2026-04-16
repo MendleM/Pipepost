@@ -164,13 +164,24 @@ export const blueskySearchSchema = z.object({
 });
 
 /**
- * Search public Bluesky posts. Unauthenticated — hits the public AppView,
- * no Bluesky credentials required.
+ * Search public Bluesky posts.
+ *
+ * Bluesky's public AppView blocks unauthenticated searchPosts (CDN-level
+ * 403), so this requires the same credentials used for posting. Results
+ * themselves are still public — auth is just Bluesky's rate-limit gate.
  */
 export async function handleBlueskySearch(
   input: z.infer<typeof blueskySearchSchema>
 ) {
-  return searchBlueskyPosts(input.query, {
+  const config = readConfig();
+  const creds = config.social?.bluesky;
+  if (!creds?.handle || !creds?.app_password) {
+    return makeError(
+      "AUTH_FAILED",
+      'Bluesky search requires authentication (Bluesky blocks unauthenticated search). Run the "setup" tool with platform: "bluesky".'
+    );
+  }
+  return searchBlueskyPosts(input.query, creds, {
     limit: input.limit,
     cursor: input.cursor,
     sort: input.sort,
