@@ -1,7 +1,7 @@
 {
   "name": "pipepost-mcp",
   "mcpName": "io.github.MendleM/pipepost",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Publish from your terminal. MCP server for content publishing, SEO, and promotion.",
   "type": "module",
   "bin": {

@@ -163,6 +163,8 @@ describe("listBlueskyMentions", () => {
     await listBlueskyMentions(creds);
 
     const url = mockFetch.mock.calls[1][0] as string;
+    // AppView host — PDS proxy for listNotifications is flaky under load.
+    expect(url).toContain("api.bsky.app");
     expect(url).toContain("listNotifications");
     expect(url).toContain("limit=50");
     expect(url).toContain("reasons=mention");
@@ -256,21 +258,23 @@ describe("searchBlueskyPosts", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("authenticates and defaults to latest sort, limit 25, against bsky.social", async () => {
+  it("authenticates and defaults to latest sort, limit 25, against the AppView", async () => {
     mockSession();
     mockSearch([]);
 
     await searchBlueskyPosts("claude code", creds);
 
-    // Session roundtrip + search = 2 calls.
+    // Session roundtrip (bsky.social) + search (api.bsky.app) = 2 calls.
     expect(mockFetch).toHaveBeenCalledTimes(2);
-    const url = mockFetch.mock.calls[1][0] as string;
+    const sessionUrl = mockFetch.mock.calls[0][0] as string;
+    const searchUrl = mockFetch.mock.calls[1][0] as string;
     const opts = mockFetch.mock.calls[1][1] as { headers?: Record<string, string> };
-    expect(url).toContain("bsky.social");
-    expect(url).toContain("searchPosts");
-    expect(url).toContain("q=claude+code");
-    expect(url).toContain("limit=25");
-    expect(url).toContain("sort=latest");
+    expect(sessionUrl).toContain("bsky.social");
+    expect(searchUrl).toContain("api.bsky.app");
+    expect(searchUrl).toContain("searchPosts");
+    expect(searchUrl).toContain("q=claude+code");
+    expect(searchUrl).toContain("limit=25");
+    expect(searchUrl).toContain("sort=latest");
     // Authenticated — the public AppView 403s unauthenticated searchPosts.
     expect(opts.headers?.Authorization).toContain("Bearer");
   });

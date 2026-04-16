@@ -2,8 +2,19 @@ import { httpRequest } from "../http.js";
 import { makeError, makeSuccess, type ToolResult } from "../errors.js";
 
 const BLUESKY_HOST = "https://bsky.social";
+const APPVIEW_HOST = "https://api.bsky.app";
 const PUBLIC_APPVIEW = "https://public.api.bsky.app";
 const MAX_POST_LENGTH = 300;
+
+// Host selection rationale:
+//   - bsky.social  = PDS (Personal Data Server). Used for writes to our own
+//                    repo (createSession, createRecord, replies, posts).
+//   - api.bsky.app = authenticated AppView. Used for aggregated reads like
+//                    searchPosts and listNotifications. The PDS sometimes
+//                    proxies AppView calls but it's unreliable under load
+//                    (intermittent 502/503/504) and much slower.
+//   - public.api.bsky.app = public AppView. Used for unauthenticated
+//                    getPostThread reads. BunnyCDN blocks searchPosts here.
 
 export interface BlueskyCredentials {
   handle: string;
@@ -337,7 +348,7 @@ export async function listBlueskyMentions(
   if (options?.cursor) params.set("cursor", options.cursor);
 
   const result = await httpRequest(
-    `${BLUESKY_HOST}/xrpc/app.bsky.notification.listNotifications?${params.toString()}`,
+    `${APPVIEW_HOST}/xrpc/app.bsky.notification.listNotifications?${params.toString()}`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${session.data.accessJwt}` },
@@ -384,8 +395,10 @@ export async function listBlueskyMentions(
  *
  * Bluesky restricts `searchPosts` on the public AppView (BunnyCDN 403s
  * unauthenticated requests to prevent scraping abuse), so this call must
- * go through an authenticated session against `bsky.social`. Credentials
- * are required — same app password used for posting.
+ * go through an authenticated AppView session. We hit `api.bsky.app`
+ * directly — the PDS will proxy search requests but its upstream is flaky
+ * (intermittent 502/503/504). Credentials are required — same app password
+ * used for posting.
  *
  * `mentions` filter is useful for "who's talking about us" queries, and
  * `author` filter for "what has this person said recently." `sort: latest`
@@ -425,7 +438,7 @@ export async function searchBlueskyPosts(
   if (options?.tag) for (const t of options.tag) params.append("tag", t);
 
   const result = await httpRequest(
-    `${BLUESKY_HOST}/xrpc/app.bsky.feed.searchPosts?${params.toString()}`,
+    `${APPVIEW_HOST}/xrpc/app.bsky.feed.searchPosts?${params.toString()}`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${session.data.accessJwt}` },
