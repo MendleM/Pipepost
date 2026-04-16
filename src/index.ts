@@ -58,6 +58,10 @@ import {
 import {
   blueskyPostSchema, handleBlueskyPost,
   mastodonPostSchema, handleMastodonPost,
+  blueskyMentionsSchema, handleBlueskyMentions,
+  blueskySearchSchema, handleBlueskySearch,
+  blueskyThreadSchema, handleBlueskyThread,
+  blueskyReplySchema, handleBlueskyReply,
 } from "./tools/broadcast-tools.js";
 
 import { formatToolResponse } from "./format-response.js";
@@ -93,7 +97,7 @@ import {
 
 const server = new McpServer({
   name: "pipepost",
-  version: "0.6.0",
+  version: "0.7.0",
 });
 
 // SEO Tools
@@ -241,6 +245,31 @@ server.tool("bluesky_post", "Post directly to Bluesky as a single post or a thre
 server.tool("mastodon_post", "Post directly to any Mastodon instance as a single post or a threaded series. Requires instance_url + access_token via setup. FREE — no credit cost.", mastodonPostSchema.shape, async (input) => {
   const parsed = mastodonPostSchema.parse(input);
   const result = await handleMastodonPost(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+// Bluesky Listening + Reply Tools (FREE)
+server.tool("bluesky_mentions", "List notifications for the configured Bluesky account — mentions and replies by default. FREE — no credit cost.", blueskyMentionsSchema.shape, async (input) => {
+  const parsed = blueskyMentionsSchema.parse(input);
+  const result = await handleBlueskyMentions(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+server.tool("bluesky_search", "Search public Bluesky posts. No Bluesky credentials required. FREE — no credit cost.", blueskySearchSchema.shape, async (input) => {
+  const parsed = blueskySearchSchema.parse(input);
+  const result = await handleBlueskySearch(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+server.tool("bluesky_thread", "Fetch the full conversation around a Bluesky post — parents above, replies below. No credentials required. FREE — no credit cost.", blueskyThreadSchema.shape, async (input) => {
+  const parsed = blueskyThreadSchema.parse(input);
+  const result = await handleBlueskyThread(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+server.tool("bluesky_reply", "Reply to a Bluesky post (single reply or chained thread). Root + parent references are computed automatically. FREE — no credit cost.", blueskyReplySchema.shape, async (input) => {
+  const parsed = blueskyReplySchema.parse(input);
+  const result = await handleBlueskyReply(parsed);
   return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
 });
 

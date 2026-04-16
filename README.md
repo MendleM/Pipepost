@@ -105,6 +105,15 @@ That's it. Try asking Claude:
 | `bluesky_post` | Post directly to Bluesky as a single post or a threaded series — bare URLs auto-linkified | Free |
 | `mastodon_post` | Post directly to any Mastodon instance as a single post or a threaded series | Free |
 
+### Listening & Reply (4 tools)
+
+| Tool | Description | Cost |
+|------|-------------|------|
+| `bluesky_mentions` | List notifications addressed to the configured account — mentions and replies by default | Free |
+| `bluesky_search` | Search public Bluesky posts by keyword, author, mentions, tag, or language. No auth needed | Free |
+| `bluesky_thread` | Fetch the full conversation around a post — parents above, replies below, for reply context | Free |
+| `bluesky_reply` | Reply to a Bluesky post (single reply or chained thread) — root + parent refs computed automatically | Free |
+
 ### Images (1 tool)
 
 | Tool | Description | Cost |

@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { readConfig } from "../config.js";
-import { postToBluesky, postThreadToBluesky } from "../broadcast/bluesky.js";
+import {
+  postToBluesky,
+  postThreadToBluesky,
+  listBlueskyMentions,
+  searchBlueskyPosts,
+  getBlueskyThread,
+  replyToBluesky,
+} from "../broadcast/bluesky.js";
 import { postToMastodon, postThreadToMastodon } from "../broadcast/mastodon.js";
 import { makeError, makeSuccess } from "../errors.js";
 
@@ -108,5 +115,129 @@ export async function handleMastodonPost(
   return makeSuccess({
     url: result.data.url,
     id: result.data.id,
+  });
+}
+
+// ── Bluesky listening + reply tools ────────────────────────────────────────
+
+/** Zod schema for the `bluesky_mentions` tool input. */
+export const blueskyMentionsSchema = z.object({
+  limit: z.number().int().min(1).max(100).optional().describe("Max notifications to return (default 50, max 100)."),
+  cursor: z.string().optional().describe("Pagination cursor from a prior response."),
+  reasons: z.array(z.string()).optional().describe('Filter by notification reason. Default: ["mention","reply"]. Other valid: like, repost, follow, quote.'),
+});
+
+/**
+ * List notifications addressed to the configured Bluesky account. Filtered
+ * to mentions and replies by default — the two signals that call for an
+ * engagement response.
+ */
+export async function handleBlueskyMentions(
+  input: z.infer<typeof blueskyMentionsSchema>
+) {
+  const config = readConfig();
+  const creds = config.social?.bluesky;
+  if (!creds?.handle || !creds?.app_password) {
+    return makeError(
+      "AUTH_FAILED",
+      'Bluesky not configured. Run the "setup" tool with platform: "bluesky".'
+    );
+  }
+  return listBlueskyMentions(creds, {
+    limit: input.limit,
+    cursor: input.cursor,
+    reasons: input.reasons,
+  });
+}
+
+/** Zod schema for the `bluesky_search` tool input. */
+export const blueskySearchSchema = z.object({
+  query: z.string().describe("Lucene-style search query. Examples: 'claude code', '\"MCP server\"', 'content publishing'."),
+  limit: z.number().int().min(1).max(100).optional().describe("Max posts to return (default 25, max 100)."),
+  cursor: z.string().optional(),
+  sort: z.enum(["top", "latest"]).optional().describe("'latest' (default) for freshness, 'top' for engagement."),
+  since: z.string().optional().describe("ISO date or datetime — only posts after this time."),
+  mentions: z.string().optional().describe("Filter to posts that mention this handle."),
+  author: z.string().optional().describe("Filter to posts by this handle."),
+  lang: z.string().optional().describe("BCP-47 language code (e.g. 'en')."),
+  tag: z.array(z.string()).optional().describe("Filter to posts with ALL of these hashtags (no # prefix)."),
+});
+
+/**
+ * Search public Bluesky posts. Unauthenticated — hits the public AppView,
+ * no Bluesky credentials required.
+ */
+export async function handleBlueskySearch(
+  input: z.infer<typeof blueskySearchSchema>
+) {
+  return searchBlueskyPosts(input.query, {
+    limit: input.limit,
+    cursor: input.cursor,
+    sort: input.sort,
+    since: input.since,
+    mentions: input.mentions,
+    author: input.author,
+    lang: input.lang,
+    tag: input.tag,
+  });
+}
+
+/** Zod schema for the `bluesky_thread` tool input. */
+export const blueskyThreadSchema = z.object({
+  uri: z.string().describe("AT-URI of the post to fetch context for (e.g. at://did:plc:.../app.bsky.feed.post/xyz)."),
+  depth: z.number().int().min(0).max(1000).optional().describe("How many reply levels below to include (default 6)."),
+  parent_height: z.number().int().min(0).max(1000).optional().describe("How many parent levels above to include (default 80)."),
+});
+
+/**
+ * Fetch the full conversation around a post so a reply can be drafted in
+ * context. Unauthenticated.
+ */
+export async function handleBlueskyThread(
+  input: z.infer<typeof blueskyThreadSchema>
+) {
+  return getBlueskyThread(input.uri, {
+    depth: input.depth,
+    parentHeight: input.parent_height,
+  });
+}
+
+/** Zod schema for the `bluesky_reply` tool input. */
+export const blueskyReplySchema = z.object({
+  parent_uri: z.string().describe("AT-URI of the post being replied to."),
+  text: z.string().optional().describe("Single reply text (<= 300 chars). Mutually exclusive with `thread`."),
+  thread: z.array(z.string()).optional().describe("Chain of replies — first reply points at parent_uri, subsequent posts chain off the prior reply."),
+});
+
+/**
+ * Reply to an existing Bluesky post (single reply or chained thread).
+ * Looks up the parent's cid + thread root automatically.
+ */
+export async function handleBlueskyReply(
+  input: z.infer<typeof blueskyReplySchema>
+) {
+  if (!input.text && (!input.thread || input.thread.length === 0)) {
+    return makeError("VALIDATION_ERROR", "Provide either `text` or `thread`");
+  }
+  if (input.text && input.thread && input.thread.length > 0) {
+    return makeError("VALIDATION_ERROR", "Provide either `text` or `thread`, not both");
+  }
+
+  const config = readConfig();
+  const creds = config.social?.bluesky;
+  if (!creds?.handle || !creds?.app_password) {
+    return makeError(
+      "AUTH_FAILED",
+      'Bluesky not configured. Run the "setup" tool with platform: "bluesky".'
+    );
+  }
+
+  const payload = input.thread && input.thread.length > 0 ? input.thread : input.text!;
+  const result = await replyToBluesky(input.parent_uri, payload, creds);
+  if (!result.success) return result;
+  return makeSuccess({
+    posts: result.data.posts,
+    count: result.data.posts.length,
+    url: result.data.posts[0]?.url,
   });
 }

@@ -7,6 +7,10 @@ vi.mock("../../src/config.js", () => ({
 vi.mock("../../src/broadcast/bluesky.js", () => ({
   postToBluesky: vi.fn(),
   postThreadToBluesky: vi.fn(),
+  listBlueskyMentions: vi.fn(),
+  searchBlueskyPosts: vi.fn(),
+  getBlueskyThread: vi.fn(),
+  replyToBluesky: vi.fn(),
 }));
 
 vi.mock("../../src/broadcast/mastodon.js", () => ({
@@ -14,9 +18,23 @@ vi.mock("../../src/broadcast/mastodon.js", () => ({
   postThreadToMastodon: vi.fn(),
 }));
 
-import { handleBlueskyPost, handleMastodonPost } from "../../src/tools/broadcast-tools.js";
+import {
+  handleBlueskyPost,
+  handleMastodonPost,
+  handleBlueskyMentions,
+  handleBlueskySearch,
+  handleBlueskyThread,
+  handleBlueskyReply,
+} from "../../src/tools/broadcast-tools.js";
 import { readConfig } from "../../src/config.js";
-import { postToBluesky, postThreadToBluesky } from "../../src/broadcast/bluesky.js";
+import {
+  postToBluesky,
+  postThreadToBluesky,
+  listBlueskyMentions,
+  searchBlueskyPosts,
+  getBlueskyThread,
+  replyToBluesky,
+} from "../../src/broadcast/bluesky.js";
 import { postToMastodon, postThreadToMastodon } from "../../src/broadcast/mastodon.js";
 
 const mockedReadConfig = vi.mocked(readConfig);
@@ -24,6 +42,14 @@ const mockedPostToBluesky = vi.mocked(postToBluesky);
 const mockedPostThread = vi.mocked(postThreadToBluesky);
 const mockedPostToMastodon = vi.mocked(postToMastodon);
 const mockedPostMastodonThread = vi.mocked(postThreadToMastodon);
+const mockedListMentions = vi.mocked(listBlueskyMentions);
+const mockedSearchPosts = vi.mocked(searchBlueskyPosts);
+const mockedGetThread = vi.mocked(getBlueskyThread);
+const mockedReplyToBluesky = vi.mocked(replyToBluesky);
+
+const blueskyCreds = {
+  social: { bluesky: { handle: "test.bsky.social", app_password: "abcd" } },
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -195,5 +221,283 @@ describe("handleMastodonPost", () => {
       expect.anything(),
       { maxLength: 1000 }
     );
+  });
+});
+
+describe("handleBlueskyMentions", () => {
+  it("fails when Bluesky not configured", async () => {
+    mockedReadConfig.mockReturnValue({});
+    const result = await handleBlueskyMentions({});
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("AUTH_FAILED");
+    expect(mockedListMentions).not.toHaveBeenCalled();
+  });
+
+  it("forwards limit, cursor, and reasons to the client", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
+    mockedListMentions.mockResolvedValue({
+      success: true,
+      data: { notifications: [], cursor: undefined },
+    });
+
+    await handleBlueskyMentions({
+      limit: 10,
+      cursor: "c1",
+      reasons: ["mention"],
+    });
+
+    expect(mockedListMentions).toHaveBeenCalledWith(
+      blueskyCreds.social.bluesky,
+      { limit: 10, cursor: "c1", reasons: ["mention"] }
+    );
+  });
+
+  it("passes through client responses unchanged", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
+    mockedListMentions.mockResolvedValue({
+      success: true,
+      data: {
+        notifications: [
+          {
+            uri: "at://x/1",
+            cid: "c1",
+            reason: "reply",
+            author: { did: "did:plc:a", handle: "a.bsky.social" },
+            text: "hi",
+            isRead: false,
+            indexedAt: "2026-04-14T00:00:00Z",
+          },
+        ],
+        cursor: "next",
+      },
+    });
+
+    const result = await handleBlueskyMentions({});
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const data = result.data as { notifications: unknown[]; cursor?: string };
+    expect(data.notifications).toHaveLength(1);
+    expect(data.cursor).toBe("next");
+  });
+});
+
+describe("handleBlueskySearch", () => {
+  it("requires no auth — runs even with empty config", async () => {
+    mockedReadConfig.mockReturnValue({});
+    mockedSearchPosts.mockResolvedValue({
+      success: true,
+      data: { posts: [], cursor: undefined },
+    });
+
+    const result = await handleBlueskySearch({ query: "mcp" });
+
+    expect(result.success).toBe(true);
+    expect(mockedSearchPosts).toHaveBeenCalled();
+  });
+
+  it("forwards every optional filter to the client", async () => {
+    mockedSearchPosts.mockResolvedValue({
+      success: true,
+      data: { posts: [], cursor: undefined },
+    });
+
+    await handleBlueskySearch({
+      query: "claude code",
+      limit: 5,
+      cursor: "c1",
+      sort: "top",
+      since: "2026-04-01",
+      mentions: "pipepost.bsky.social",
+      author: "someone.bsky.social",
+      lang: "en",
+      tag: ["ai"],
+    });
+
+    expect(mockedSearchPosts).toHaveBeenCalledWith("claude code", {
+      limit: 5,
+      cursor: "c1",
+      sort: "top",
+      since: "2026-04-01",
+      mentions: "pipepost.bsky.social",
+      author: "someone.bsky.social",
+      lang: "en",
+      tag: ["ai"],
+    });
+  });
+});
+
+describe("handleBlueskyThread", () => {
+  it("runs without Bluesky auth — public AppView", async () => {
+    mockedReadConfig.mockReturnValue({});
+    mockedGetThread.mockResolvedValue({
+      success: true,
+      data: {
+        post: {
+          uri: "at://x/1",
+          cid: "c1",
+          author: { did: "did:plc:a", handle: "a.bsky.social" },
+          text: "hi",
+          indexedAt: "2026-04-14T00:00:00Z",
+          url: "https://bsky.app/profile/a.bsky.social/post/1",
+        },
+        replies: [],
+      },
+    });
+
+    const result = await handleBlueskyThread({
+      uri: "at://did:plc:a/app.bsky.feed.post/1",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockedGetThread).toHaveBeenCalledWith(
+      "at://did:plc:a/app.bsky.feed.post/1",
+      { depth: undefined, parentHeight: undefined }
+    );
+  });
+
+  it("maps depth and parent_height options", async () => {
+    mockedGetThread.mockResolvedValue({
+      success: true,
+      data: {
+        post: {
+          uri: "at://x/1",
+          cid: "c1",
+          author: { did: "did:plc:a", handle: "a.bsky.social" },
+          text: "",
+          indexedAt: "2026-04-14T00:00:00Z",
+          url: "https://bsky.app/profile/a.bsky.social/post/1",
+        },
+        replies: [],
+      },
+    });
+
+    await handleBlueskyThread({
+      uri: "at://did:plc:a/app.bsky.feed.post/1",
+      depth: 3,
+      parent_height: 10,
+    });
+
+    expect(mockedGetThread).toHaveBeenCalledWith(
+      "at://did:plc:a/app.bsky.feed.post/1",
+      { depth: 3, parentHeight: 10 }
+    );
+  });
+});
+
+describe("handleBlueskyReply", () => {
+  it("fails when Bluesky not configured", async () => {
+    mockedReadConfig.mockReturnValue({});
+    const result = await handleBlueskyReply({
+      parent_uri: "at://x/1",
+      text: "hi",
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("AUTH_FAILED");
+    expect(mockedReplyToBluesky).not.toHaveBeenCalled();
+  });
+
+  it("fails when neither text nor thread provided", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
+    const result = await handleBlueskyReply({
+      parent_uri: "at://x/1",
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("fails when both text and thread provided", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
+    const result = await handleBlueskyReply({
+      parent_uri: "at://x/1",
+      text: "a",
+      thread: ["b", "c"],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("routes single reply as a string payload", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
+    mockedReplyToBluesky.mockResolvedValue({
+      success: true,
+      data: {
+        posts: [
+          {
+            uri: "at://y/1",
+            cid: "c1",
+            url: "https://bsky.app/profile/test.bsky.social/post/1",
+          },
+        ],
+      },
+    });
+
+    const result = await handleBlueskyReply({
+      parent_uri: "at://x/1",
+      text: "thanks",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(mockedReplyToBluesky).toHaveBeenCalledWith(
+      "at://x/1",
+      "thanks",
+      blueskyCreds.social.bluesky
+    );
+    const data = result.data as { count: number; url: string };
+    expect(data.count).toBe(1);
+    expect(data.url).toBe("https://bsky.app/profile/test.bsky.social/post/1");
+  });
+
+  it("routes threaded reply as an array payload", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
+    mockedReplyToBluesky.mockResolvedValue({
+      success: true,
+      data: {
+        posts: [
+          { uri: "at://y/1", cid: "c1", url: "https://bsky.app/profile/test.bsky.social/post/1" },
+          { uri: "at://y/2", cid: "c2", url: "https://bsky.app/profile/test.bsky.social/post/2" },
+        ],
+      },
+    });
+
+    const result = await handleBlueskyReply({
+      parent_uri: "at://x/1",
+      thread: ["one", "two"],
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(mockedReplyToBluesky).toHaveBeenCalledWith(
+      "at://x/1",
+      ["one", "two"],
+      blueskyCreds.social.bluesky
+    );
+    const data = result.data as { count: number };
+    expect(data.count).toBe(2);
+  });
+
+  it("propagates client errors", async () => {
+    mockedReadConfig.mockReturnValue(blueskyCreds);
+    mockedReplyToBluesky.mockResolvedValue({
+      success: false,
+      error: {
+        code: "NOT_FOUND",
+        message: "Post not found",
+        platform: "bluesky",
+        retryable: false,
+      },
+    });
+
+    const result = await handleBlueskyReply({
+      parent_uri: "at://gone/1",
+      text: "hi",
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("NOT_FOUND");
   });
 });
