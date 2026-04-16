@@ -85,7 +85,7 @@ Dev.to articles for SEO compounding (dofollow canonical to pipepost.dev). Bluesk
 **Cadence:** Per-release content + opportunistic content when I'm in session.
 
 **Per-release content artifact:**
-- 1 dev.to draft (canonical = pipepost.dev/blog/<slug>) — pulls from `~/Projects/pipepost-gtm/content-engine/queue.json`
+- 1 dev.to article published live to brand account `team@pipepost.dev` (canonical = pipepost.dev/blog/<slug>) — drafts only when something needs human judgment (e.g., comparing competitors, taking a stance the founder should review)
 - 1 Bluesky thread (3–5 posts) announcing what shipped + why it matters
 - 1 release note on GitHub
 
