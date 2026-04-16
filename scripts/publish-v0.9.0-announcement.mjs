@@ -25,10 +25,10 @@ const res = await fetch("https://dev.to/api/articles", {
   body: JSON.stringify({
     article: {
       title: "Pipepost v0.9.0 — Substack publishing + the agent-loop transcript",
-      published: false,
+      published: true,
       body_markdown: body,
       tags: ["mcp", "claudecode", "substack", "typescript"],
-      canonical_url: "https://pipepost.dev/blog/v0-9-0-substack-agent-loop",
+      canonical_url: "https://github.com/MendleM/Pipepost/releases/tag/v0.9.0",
       organization_id: undefined,
     },
   }),
