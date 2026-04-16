@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.git
+.github
+.vscode
+.idea
+*.log
+.DS_Store
+docs
+content
+assets
+__tests__
+.superpowers
