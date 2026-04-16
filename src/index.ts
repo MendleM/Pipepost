@@ -99,7 +99,7 @@ import {
 
 const server = new McpServer({
   name: "pipepost",
-  version: "0.8.1",
+  version: "0.9.0",
 });
 
 // SEO Tools
@@ -135,7 +135,7 @@ server.tool("cover_image", "Search Unsplash for cover images with proper attribu
 });
 
 // Publishing Tools
-server.tool("publish", "Publish content to a CMS platform (devto, ghost, hashnode, wordpress, medium) — costs 1 credit per publish", publishSchema.shape, async (input) => {
+server.tool("publish", "Publish content to a CMS platform (devto, ghost, hashnode, wordpress, medium, substack) — costs 1 credit per publish", publishSchema.shape, async (input) => {
   const parsed = publishSchema.parse(input);
   const result = await handlePublish(parsed);
   return { content: [{ type: "text", text: formatToolResponse("publish", result, formatPublish) }] };
@@ -182,7 +182,7 @@ server.tool("analytics", "Fetch post analytics and stats across all configured p
 });
 
 // Setup Tools
-server.tool("setup", "Configure API credentials for a platform (devto, ghost, hashnode, wordpress, medium)", setupSchema.shape, async (input) => {
+server.tool("setup", "Configure API credentials for a platform (devto, ghost, hashnode, wordpress, medium, substack)", setupSchema.shape, async (input) => {
   const parsed = setupSchema.parse(input);
   const result = await handleSetup(parsed);
   return { content: [{ type: "text", text: formatToolResponse("setup", result, formatSetup) }] };

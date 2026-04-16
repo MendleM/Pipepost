@@ -72,7 +72,7 @@ That's it. Try asking Claude:
 
 | Tool | Description | Cost |
 |------|-------------|------|
-| `publish` | Publish to Dev.to, Ghost, Hashnode, WordPress, or Medium | 1 credit |
+| `publish` | Publish to Dev.to, Ghost, Hashnode, WordPress, Medium, or Substack | 1 credit |
 | `cross_publish` | Publish to multiple platforms with automatic canonical URL wiring | 1 credit |
 | `list_posts` | List published and draft posts from any platform | Free |
 
@@ -178,6 +178,7 @@ That's it. Try asking Claude:
 | Hashnode | ✔ | ✔ | ✔ | ✔ |
 | WordPress | ✔ | ✔ | ✔ | ✘ |
 | Medium | ✔ | ✘ | ✘ | ✔ |
+| Substack | ✔ | ✔ | ✘ | ✘ |
 
 ### Social Platforms (Generation)
 
@@ -211,7 +212,7 @@ Pipepost MCP Server
     |--- SEO Engine (local scoring, meta generation, JSON-LD)
     |--- IndexNow API (Bing, Yandex, search engines)
     |--- Unsplash API (cover images)
-    |--- Dev.to / Ghost / Hashnode / WordPress / Medium APIs
+    |--- Dev.to / Ghost / Hashnode / WordPress / Medium / Substack APIs
     |--- Bluesky AT Protocol (post, search, reply)
     |--- Mastodon API (any instance)
     |--- LinkedIn /v2/ugcPosts
@@ -229,6 +230,7 @@ All processing happens locally. Platform APIs are only called when you explicitl
 | Hashnode | [hashnode.com/settings/developer](https://hashnode.com/settings/developer) |
 | WordPress | Users > Application Passwords |
 | Medium | [medium.com/me/settings/security](https://medium.com/me/settings/security) |
+| Substack | DevTools → Application → Cookies → `substack.com` → copy `connect.sid`. Pass with your publication URL (e.g. `https://you.substack.com`). |
 | Unsplash | [unsplash.com/developers](https://unsplash.com/developers) |
 | Bluesky | [bsky.app/settings/app-passwords](https://bsky.app/settings/app-passwords) |
 | Mastodon | `https://<your-instance>/settings/applications` (scope: `write:statuses`) |

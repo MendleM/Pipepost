@@ -6,7 +6,7 @@ import { makeError, makeSuccess } from "../errors.js";
 
 /** Zod schema for the `setup` tool input. */
 export const setupSchema = z.object({
-  platform: z.string().describe("Platform to configure: devto, ghost, hashnode, wordpress, medium, x, linkedin, reddit, bluesky, mastodon, unsplash"),
+  platform: z.string().describe("Platform to configure: devto, ghost, hashnode, wordpress, medium, substack, x, linkedin, reddit, bluesky, mastodon, unsplash"),
   credentials: z.record(z.string()).describe("API credentials as key-value pairs"),
 });
 
@@ -49,6 +49,25 @@ export async function handleSetup(input: z.infer<typeof setupSchema>) {
     if (!creds.token) return makeError("VALIDATION_ERROR", "Missing token for Medium");
     writeConfig({ platforms: { ...config.platforms, medium: { token: creds.token } } });
     return makeSuccess({ message: "Medium configured successfully", platform: "medium" });
+  }
+
+  if (platform === "substack") {
+    if (!creds.connect_sid || !creds.publication_url) {
+      return makeError(
+        "VALIDATION_ERROR",
+        "Missing connect_sid or publication_url for Substack. Sign in to Substack in your browser, copy the value of the `connect.sid` cookie (DevTools → Application → Cookies → substack.com), and pass your publication URL like https://you.substack.com. Optionally include user_id (numeric) to skip the profile lookup."
+      );
+    }
+    const substack: { connect_sid: string; publication_url: string; user_id?: number } = {
+      connect_sid: creds.connect_sid,
+      publication_url: creds.publication_url.replace(/\/+$/, ""),
+    };
+    if (creds.user_id) {
+      const parsed = Number(creds.user_id);
+      if (Number.isFinite(parsed)) substack.user_id = parsed;
+    }
+    writeConfig({ platforms: { ...config.platforms, substack } });
+    return makeSuccess({ message: "Substack configured successfully", platform: "substack" });
   }
 
   if (platform === "unsplash") {
@@ -118,7 +137,7 @@ export async function handleSetup(input: z.infer<typeof setupSchema>) {
     return makeSuccess({ message: "X configured successfully", platform: "x" });
   }
 
-  return makeError("VALIDATION_ERROR", `Platform "${platform}" is not supported. Supported: devto, ghost, hashnode, wordpress, medium, unsplash, bluesky, mastodon, linkedin, x`);
+  return makeError("VALIDATION_ERROR", `Platform "${platform}" is not supported. Supported: devto, ghost, hashnode, wordpress, medium, substack, unsplash, bluesky, mastodon, linkedin, x`);
 }
 
 /** Zod schema for the `activate` tool input. */

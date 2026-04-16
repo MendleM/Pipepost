@@ -4,7 +4,12 @@ import { publishToGhost, listGhostPosts } from "../publish/ghost.js";
 import { publishToHashnode, listHashnodePosts } from "../publish/hashnode.js";
 import { publishToWordpress, listWordpressPosts } from "../publish/wordpress.js";
 import { publishToMedium } from "../publish/medium.js";
-import { readConfig } from "../config.js";
+import {
+  publishToSubstack,
+  listSubstackPosts,
+  fetchSubstackUserId,
+} from "../publish/substack.js";
+import { readConfig, writeConfig } from "../config.js";
 import { hasCredits, useCredit, addCredits } from "../credits.js";
 import { makeError, makeSuccess, type ToolResult } from "../errors.js";
 import {
@@ -17,9 +22,10 @@ import {
 
 /** Zod schema for the `publish` tool input. */
 export const publishSchema = z.object({
-  platform: z.string().describe("Publishing platform: devto, ghost, hashnode, wordpress, medium"),
+  platform: z.string().describe("Publishing platform: devto, ghost, hashnode, wordpress, medium, substack"),
   title: z.string().describe("Article title"),
   content: z.string().describe("Article content in markdown"),
+  subtitle: z.string().optional().describe("Subtitle / dek (used by Substack)"),
   tags: z.array(z.string()).optional().describe("Tags for the article"),
   status: z.enum(["draft", "published"]).optional().default("draft").describe("Publish status"),
   featured_image_url: z.string().optional().describe("Featured image URL"),
@@ -120,6 +126,31 @@ async function dispatchPublish(input: z.infer<typeof publishSchema>): Promise<To
     );
   }
 
+  if (input.platform === "substack") {
+    const subConfig = config.platforms?.substack;
+    if (!subConfig?.connect_sid || !subConfig?.publication_url) {
+      return makeError(
+        "AUTH_FAILED",
+        'Substack not configured. Run the "setup" tool with platform: "substack" and credentials: { connect_sid, publication_url }.'
+      );
+    }
+
+    // Resolve user_id once; cache it back to config so subsequent publishes
+    // skip the /user/profile/self round trip.
+    let resolved = subConfig;
+    if (typeof resolved.user_id !== "number") {
+      const idResult = await fetchSubstackUserId(resolved.connect_sid);
+      if (!idResult.success) return idResult;
+      resolved = { ...resolved, user_id: idResult.data };
+      writeConfig({ platforms: { ...config.platforms, substack: resolved } });
+    }
+
+    return publishToSubstack(
+      { title: input.title, subtitle: input.subtitle, content, status: input.status },
+      resolved
+    );
+  }
+
   return makeError("PLATFORM_ERROR", `Platform ${input.platform} is not supported`);
 }
 
@@ -201,6 +232,14 @@ export async function handleListPosts(input: z.infer<typeof listPostsSchema>) {
     return makeError("VALIDATION_ERROR", "Medium API does not support listing posts.");
   }
 
+  if (input.platform === "substack") {
+    const subConfig = config.platforms?.substack;
+    if (!subConfig?.connect_sid || !subConfig?.publication_url) {
+      return makeError("AUTH_FAILED", "Substack not configured");
+    }
+    return listSubstackPosts(subConfig, input.limit);
+  }
+
   return makeError("PLATFORM_ERROR", `Platform ${input.platform} does not support listing posts`);
 }
 
@@ -208,9 +247,10 @@ export async function handleListPosts(input: z.infer<typeof listPostsSchema>) {
 
 /** Zod schema for the `cross_publish` tool input. */
 export const crossPublishSchema = z.object({
-  platforms: z.array(z.string()).describe("Platforms to publish to: devto, ghost, hashnode, wordpress, medium"),
+  platforms: z.array(z.string()).describe("Platforms to publish to: devto, ghost, hashnode, wordpress, medium, substack"),
   title: z.string().describe("Article title"),
   content: z.string().describe("Article content in markdown"),
+  subtitle: z.string().optional().describe("Subtitle / dek (used by Substack)"),
   tags: z.array(z.string()).optional().describe("Tags for the article"),
   status: z.enum(["draft", "published"]).optional().default("draft").describe("Publish status"),
   featured_image_url: z.string().optional().describe("Featured image URL"),

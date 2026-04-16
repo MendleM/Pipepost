@@ -42,11 +42,12 @@ describe("validatePlatform", () => {
     expect(validatePlatform("hashnode")).toBeNull();
     expect(validatePlatform("wordpress")).toBeNull();
     expect(validatePlatform("medium")).toBeNull();
+    expect(validatePlatform("substack")).toBeNull();
   });
 
   it("returns error for unknown platform", () => {
     expect(validatePlatform("blogger")).toBe(
-      'Unknown platform: blogger. Valid: devto, ghost, hashnode, wordpress, medium'
+      'Unknown platform: blogger. Valid: devto, ghost, hashnode, wordpress, medium, substack'
     );
   });
 });

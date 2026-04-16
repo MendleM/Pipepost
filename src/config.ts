@@ -19,6 +19,7 @@ export interface PipepostConfig {
     hashnode?: { token: string; publication_id: string };
     wordpress?: { url: string; username: string; app_password: string };
     medium?: { token: string };
+    substack?: { connect_sid: string; publication_url: string; user_id?: number };
   };
   social?: {
     twitter?: { consumer_key: string; consumer_secret: string; access_token: string; access_token_secret: string };

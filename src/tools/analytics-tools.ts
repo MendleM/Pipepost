@@ -299,6 +299,12 @@ export async function handleAnalytics(
         posts: [],
         note: "Medium API does not support analytics",
       });
+    } else if (platform === "substack") {
+      results.push({
+        platform: "substack",
+        posts: [],
+        note: "Substack post analytics are not yet wired into the unified analytics view. Use list_posts on the substack platform to see drafts + published posts.",
+      });
     }
   }
 

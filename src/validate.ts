@@ -1,4 +1,4 @@
-const VALID_PLATFORMS = ["devto", "ghost", "hashnode", "wordpress", "medium"] as const;
+const VALID_PLATFORMS = ["devto", "ghost", "hashnode", "wordpress", "medium", "substack"] as const;
 /** Union of supported publishing platform identifiers. */
 export type Platform = (typeof VALID_PLATFORMS)[number];
 

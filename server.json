@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.MendleM/pipepost",
-  "description": "Open-source MCP server to publish to Dev.to, Ghost, Hashnode, WordPress, Medium, LinkedIn, X, Bluesky, and Mastodon from Claude Code. Local stdio, no cloud relay. Includes SEO scoring, JSON-LD schema, canonical-URL wiring, social-post generation, Unsplash covers, and IndexNow.",
-  "version": "0.8.1",
+  "description": "MCP server to publish to Substack, Ghost, Dev.to, WordPress, LinkedIn + 5 more from Claude Code.",
+  "version": "0.9.0",
   "repository": {
     "url": "https://github.com/MendleM/Pipepost",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registryType": "npm",
       "identifier": "pipepost-mcp",
-      "version": "0.8.1",
+      "version": "0.9.0",
       "transport": {
         "type": "stdio"
       }

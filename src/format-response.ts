@@ -89,6 +89,7 @@ function platformLabel(p: string): string {
     hashnode: "Hashnode",
     wordpress: "WordPress",
     medium: "Medium",
+    substack: "Substack",
   };
   return map[p] ?? p;
 }
@@ -562,7 +563,7 @@ export function formatStatus(data: unknown): string {
     license_status: string;
   };
 
-  const allPlatforms = ["devto", "ghost", "hashnode", "wordpress", "medium", "unsplash"];
+  const allPlatforms = ["devto", "ghost", "hashnode", "wordpress", "medium", "substack", "unsplash"];
   const configured = new Set(d.platforms_configured);
 
   const platformChecklist = allPlatforms.map((p) => ({
