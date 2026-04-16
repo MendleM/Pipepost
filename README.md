@@ -98,6 +98,13 @@ That's it. Try asking Claude:
 | `generate_social_posts` | Generate platform-optimized posts for Twitter, LinkedIn, Reddit, Bluesky | Credits |
 | `repurpose` | Transform a blog post into Twitter threads, LinkedIn posts, Reddit posts, HN titles, Bluesky posts, newsletter intros | Credits |
 
+### Broadcast (2 tools)
+
+| Tool | Description | Cost |
+|------|-------------|------|
+| `bluesky_post` | Post directly to Bluesky as a single post or a threaded series — bare URLs auto-linkified | Free |
+| `mastodon_post` | Post directly to any Mastodon instance as a single post or a threaded series | Free |
+
 ### Images (1 tool)
 
 | Tool | Description | Cost |
@@ -211,6 +218,8 @@ All processing happens locally. Platform APIs are only called when you explicitl
 | WordPress | Users > Application Passwords |
 | Medium | [medium.com/me/settings/security](https://medium.com/me/settings/security) |
 | Unsplash | [unsplash.com/developers](https://unsplash.com/developers) |
+| Bluesky | [bsky.app/settings/app-passwords](https://bsky.app/settings/app-passwords) |
+| Mastodon | `https://<your-instance>/settings/applications` (scope: `write:statuses`) |
 
 ## Contributing
 

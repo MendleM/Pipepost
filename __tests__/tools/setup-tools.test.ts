@@ -129,6 +129,59 @@ describe("handleSetup", () => {
     );
   });
 
+  it("saves handle and app_password for bluesky", async () => {
+    const result = await handleSetup({
+      platform: "bluesky",
+      credentials: { handle: "test.bsky.social", app_password: "abcd-efgh-ijkl-mnop" },
+    });
+    expect(result.success).toBe(true);
+    expect(mockedWriteConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        social: expect.objectContaining({
+          bluesky: { handle: "test.bsky.social", app_password: "abcd-efgh-ijkl-mnop" },
+        }),
+      })
+    );
+  });
+
+  it("requires both handle and app_password for bluesky", async () => {
+    const result = await handleSetup({
+      platform: "bluesky",
+      credentials: { handle: "test.bsky.social" },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("VALIDATION_ERROR");
+    }
+  });
+
+  it("saves instance_url and access_token for mastodon", async () => {
+    const result = await handleSetup({
+      platform: "mastodon",
+      credentials: { instance_url: "https://mastodon.social", access_token: "mast-token" },
+    });
+    expect(result.success).toBe(true);
+    expect(mockedWriteConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        social: expect.objectContaining({
+          mastodon: { instance_url: "https://mastodon.social", access_token: "mast-token" },
+        }),
+      })
+    );
+  });
+
+  it("requires both instance_url and access_token for mastodon", async () => {
+    const result = await handleSetup({
+      platform: "mastodon",
+      credentials: { instance_url: "https://mastodon.social" },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("VALIDATION_ERROR");
+      expect(result.error.message).toContain("access_token");
+    }
+  });
+
   it("returns error for invalid platform", async () => {
     const result = await handleSetup({
       platform: "fakebook",

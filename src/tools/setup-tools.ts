@@ -6,7 +6,7 @@ import { makeError, makeSuccess } from "../errors.js";
 
 /** Zod schema for the `setup` tool input. */
 export const setupSchema = z.object({
-  platform: z.string().describe("Platform to configure: devto, ghost, hashnode, wordpress, medium, twitter, reddit, bluesky, unsplash"),
+  platform: z.string().describe("Platform to configure: devto, ghost, hashnode, wordpress, medium, twitter, reddit, bluesky, mastodon, unsplash"),
   credentials: z.record(z.string()).describe("API credentials as key-value pairs"),
 });
 
@@ -57,7 +57,29 @@ export async function handleSetup(input: z.infer<typeof setupSchema>) {
     return makeSuccess({ message: "Unsplash configured successfully", platform: "unsplash" });
   }
 
-  return makeError("VALIDATION_ERROR", `Platform "${platform}" is not supported. Supported: devto, ghost, hashnode, wordpress, medium, unsplash`);
+  if (platform === "bluesky") {
+    if (!creds.handle || !creds.app_password) {
+      return makeError(
+        "VALIDATION_ERROR",
+        "Missing handle or app_password for Bluesky. Generate an app password at https://bsky.app/settings/app-passwords"
+      );
+    }
+    writeConfig({ social: { ...config.social, bluesky: { handle: creds.handle, app_password: creds.app_password } } });
+    return makeSuccess({ message: "Bluesky configured successfully", platform: "bluesky" });
+  }
+
+  if (platform === "mastodon") {
+    if (!creds.instance_url || !creds.access_token) {
+      return makeError(
+        "VALIDATION_ERROR",
+        "Missing instance_url or access_token for Mastodon. Create an application at https://<your-instance>/settings/applications with the write:statuses scope."
+      );
+    }
+    writeConfig({ social: { ...config.social, mastodon: { instance_url: creds.instance_url, access_token: creds.access_token } } });
+    return makeSuccess({ message: "Mastodon configured successfully", platform: "mastodon" });
+  }
+
+  return makeError("VALIDATION_ERROR", `Platform "${platform}" is not supported. Supported: devto, ghost, hashnode, wordpress, medium, unsplash, bluesky, mastodon`);
 }
 
 /** Zod schema for the `activate` tool input. */

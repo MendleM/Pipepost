@@ -55,6 +55,11 @@ import {
   checkLinksSchema, handleCheckLinks,
 } from "./tools/link-tools.js";
 
+import {
+  blueskyPostSchema, handleBlueskyPost,
+  mastodonPostSchema, handleMastodonPost,
+} from "./tools/broadcast-tools.js";
+
 import { formatToolResponse } from "./format-response.js";
 import {
   formatPublish,
@@ -88,7 +93,7 @@ import {
 
 const server = new McpServer({
   name: "pipepost",
-  version: "0.5.0",
+  version: "0.6.0",
 });
 
 // SEO Tools
@@ -224,6 +229,19 @@ server.tool("check_links", "Validate all URLs in markdown content — reports br
   const parsed = checkLinksSchema.parse(input);
   const result = await handleCheckLinks(parsed);
   return { content: [{ type: "text", text: formatToolResponse("check_links", result, formatLinkCheck) }] };
+});
+
+// Broadcast Tools (direct social posting — FREE)
+server.tool("bluesky_post", "Post directly to Bluesky as a single post or a threaded series. Requires handle + app password via setup. FREE — no credit cost.", blueskyPostSchema.shape, async (input) => {
+  const parsed = blueskyPostSchema.parse(input);
+  const result = await handleBlueskyPost(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+server.tool("mastodon_post", "Post directly to any Mastodon instance as a single post or a threaded series. Requires instance_url + access_token via setup. FREE — no credit cost.", mastodonPostSchema.shape, async (input) => {
+  const parsed = mastodonPostSchema.parse(input);
+  const result = await handleMastodonPost(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
 });
 
 async function main() {
