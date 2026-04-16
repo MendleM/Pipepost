@@ -7,17 +7,11 @@ import * as os from "node:os";
 const LS_API = "https://api.lemonsqueezy.com/v1/licenses";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-// Lemon Squeezy variant IDs — set these after creating products
-// Can also be overridden via environment variables
-const STARTER_VARIANT_IDS = new Set(
-  (process.env.PIPEPOST_STARTER_VARIANTS ?? "").split(",").filter(Boolean)
-);
-const PRO_VARIANT_IDS = new Set(
-  (process.env.PIPEPOST_PRO_VARIANTS ?? "").split(",").filter(Boolean)
-);
-const POWER_VARIANT_IDS = new Set(
-  (process.env.PIPEPOST_POWER_VARIANTS ?? "").split(",").filter(Boolean)
-);
+// Lemon Squeezy variant IDs for the Pipepost credit packs.
+// Store: https://pipepost.lemonsqueezy.com (store_id 345198)
+const STARTER_VARIANT_IDS = new Set(["1536445"]); // Pipepost Starter — $8 / 10 credits
+const PRO_VARIANT_IDS = new Set(["1536460"]);     // Pipepost Pro     — $19 / 30 credits
+const POWER_VARIANT_IDS = new Set(["1536462"]);   // Pipepost Power   — $49 / 100 credits
 
 /** Result of a license validation check. */
 export interface LicenseStatus {

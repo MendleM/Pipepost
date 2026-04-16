@@ -135,7 +135,7 @@ That's it. Try asking Claude:
 
 | | Free | Starter ($8) | Pro ($19) | Power ($49) |
 |---|---|---|---|---|
-| **Credits** | 3/month | 25 | 75 | 250 |
+| **Credits** | 3/month | 10 | 30 | 100 |
 | **SEO scoring** | Basic | Full analysis | Full analysis | Full analysis |
 | **SEO meta + schema** | -- | ✔ | ✔ | ✔ |
 | **Publish** | ✔ | ✔ | ✔ | ✔ |

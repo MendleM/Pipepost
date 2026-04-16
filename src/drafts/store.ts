@@ -20,6 +20,15 @@ function generateId(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 }
 
+// Module-level monotonic clock — ensures two saves in the same millisecond
+// get strictly increasing timestamps so listDrafts sort order is deterministic.
+let lastTimestampMs = 0;
+function nowIsoMonotonic(): string {
+  const t = Math.max(Date.now(), lastTimestampMs + 1);
+  lastTimestampMs = t;
+  return new Date(t).toISOString();
+}
+
 /** Save a new draft or update an existing one. */
 export function saveDraft(input: {
   title: string;
@@ -31,7 +40,7 @@ export function saveDraft(input: {
 }) {
   ensureDir();
 
-  const now = new Date().toISOString();
+  const now = nowIsoMonotonic();
   const id = input.id ?? generateId();
   const filePath = path.join(getDraftsDir(), `${id}.json`);
 
