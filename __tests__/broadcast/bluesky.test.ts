@@ -369,6 +369,76 @@ describe("searchBlueskyPosts", () => {
     if (result.success) return;
     expect(result.error.code).toBe("AUTH_FAILED");
   });
+
+  it("fails over from api.bsky.app to bsky.social when the AppView 5xx's", async () => {
+    // Both hosts get a full 5xx round (httpRequest retries once internally),
+    // but only api.bsky.app fails. bsky.social's proxied AppView answers.
+    mockSession();
+    // api.bsky.app: initial 503 + internal retry 503 (two fetch calls)
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      text: async () => "Service Unavailable",
+    });
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      text: async () => "Service Unavailable",
+    });
+    // bsky.social: success on first attempt
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ posts: [], cursor: undefined }),
+    });
+
+    const result = await searchBlueskyPosts("mcp", creds);
+
+    expect(result.success).toBe(true);
+    // 1 session + 2 (api.bsky.app initial + its internal retry) + 1 bsky.social
+    expect(mockFetch).toHaveBeenCalledTimes(4);
+    const firstAttempt = mockFetch.mock.calls[1][0] as string;
+    const finalAttempt = mockFetch.mock.calls[3][0] as string;
+    expect(firstAttempt).toContain("api.bsky.app");
+    expect(finalAttempt).toContain("bsky.social");
+    expect(finalAttempt).toContain("searchPosts");
+  });
+
+  it("returns the failover host's error when both AppView hosts fail", async () => {
+    mockSession();
+    // Both hosts return sustained 5xx (2 fetches per host due to internal retry)
+    for (let i = 0; i < 4; i++) {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        text: async () => "Service Unavailable",
+      });
+    }
+
+    const result = await searchBlueskyPosts("mcp", creds);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("PLATFORM_ERROR");
+    expect(mockFetch).toHaveBeenCalledTimes(5);
+  });
+
+  it("does not failover on auth errors — those repeat deterministically", async () => {
+    mockSession();
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      text: async () => "expired",
+    });
+
+    const result = await searchBlueskyPosts("mcp", creds);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("AUTH_FAILED");
+    // Only session + 1 AppView call — no failover.
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("getBlueskyThread", () => {

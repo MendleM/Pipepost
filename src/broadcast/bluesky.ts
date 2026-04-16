@@ -6,13 +6,26 @@ const APPVIEW_HOST = "https://api.bsky.app";
 const PUBLIC_APPVIEW = "https://public.api.bsky.app";
 const MAX_POST_LENGTH = 300;
 
+// Hosts for authenticated AppView reads, tried in order on failure.
+// Both respond to searchPosts/listNotifications; either can go sluggish
+// (sustained 5xx for 30+s) without warning, so we failover between them.
+const APPVIEW_HOSTS = [APPVIEW_HOST, BLUESKY_HOST] as const;
+
+// Per-attempt timeout for AppView reads. Bluesky's AppView has been slow
+// enough (5-10s+) under load that the shared 10s default clipped legit
+// requests; 20s lets a sluggish-but-working response land before we retry
+// against the alternate host.
+const APPVIEW_READ_TIMEOUT_MS = 20_000;
+
 // Host selection rationale:
-//   - bsky.social  = PDS (Personal Data Server). Used for writes to our own
-//                    repo (createSession, createRecord, replies, posts).
-//   - api.bsky.app = authenticated AppView. Used for aggregated reads like
-//                    searchPosts and listNotifications. The PDS sometimes
-//                    proxies AppView calls but it's unreliable under load
-//                    (intermittent 502/503/504) and much slower.
+//   - bsky.social  = PDS (Personal Data Server). Primary target for writes
+//                    (createSession, createRecord, replies, posts). Also
+//                    proxies AppView reads, which we use as the failover
+//                    host when api.bsky.app is sluggish.
+//   - api.bsky.app = authenticated AppView. Primary target for aggregated
+//                    reads (searchPosts, listNotifications). When it
+//                    5xx's we retry via bsky.social which reaches the
+//                    same AppView through a different upstream path.
 //   - public.api.bsky.app = public AppView. Used for unauthenticated
 //                    getPostThread reads. BunnyCDN blocks searchPosts here.
 
@@ -106,6 +119,45 @@ async function createSession(
   }
 
   return makeSuccess({ accessJwt: data.accessJwt, did: data.did });
+}
+
+/**
+ * Authenticated GET against the Bluesky AppView, with host failover.
+ *
+ * Tries api.bsky.app first (direct AppView), then bsky.social (PDS proxy
+ * to the same AppView) on 5xx or timeout. Both hosts have exhibited
+ * sustained multi-request 5xx windows independently, so falling back to
+ * the other host is materially more reliable than simply retrying the
+ * same one. Non-5xx errors (auth, validation) short-circuit immediately —
+ * retrying a 401 against a different host won't help.
+ */
+async function appViewGet(
+  path: string,
+  queryString: string,
+  accessJwt: string
+): Promise<ToolResult> {
+  let lastError: ToolResult | null = null;
+  for (const host of APPVIEW_HOSTS) {
+    const url = queryString
+      ? `${host}/xrpc/${path}?${queryString}`
+      : `${host}/xrpc/${path}`;
+    const result = await httpRequest(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessJwt}` },
+      timeoutMs: APPVIEW_READ_TIMEOUT_MS,
+    });
+    if (result.success) return result;
+    lastError = result;
+    // Only failover on server-side or network failures. Auth/validation
+    // errors are deterministic and will just repeat on the other host.
+    if (
+      result.error.code !== "PLATFORM_ERROR" &&
+      result.error.code !== "NETWORK_ERROR"
+    ) {
+      return result;
+    }
+  }
+  return lastError ?? makeError("PLATFORM_ERROR", "AppView read failed");
 }
 
 /**
@@ -347,12 +399,10 @@ export async function listBlueskyMentions(
   for (const r of reasons) params.append("reasons", r);
   if (options?.cursor) params.set("cursor", options.cursor);
 
-  const result = await httpRequest(
-    `${APPVIEW_HOST}/xrpc/app.bsky.notification.listNotifications?${params.toString()}`,
-    {
-      method: "GET",
-      headers: { Authorization: `Bearer ${session.data.accessJwt}` },
-    }
+  const result = await appViewGet(
+    "app.bsky.notification.listNotifications",
+    params.toString(),
+    session.data.accessJwt
   );
 
   if (!result.success) {
@@ -437,12 +487,10 @@ export async function searchBlueskyPosts(
   if (options?.lang) params.set("lang", options.lang);
   if (options?.tag) for (const t of options.tag) params.append("tag", t);
 
-  const result = await httpRequest(
-    `${APPVIEW_HOST}/xrpc/app.bsky.feed.searchPosts?${params.toString()}`,
-    {
-      method: "GET",
-      headers: { Authorization: `Bearer ${session.data.accessJwt}` },
-    }
+  const result = await appViewGet(
+    "app.bsky.feed.searchPosts",
+    params.toString(),
+    session.data.accessJwt
   );
 
   if (!result.success) {
