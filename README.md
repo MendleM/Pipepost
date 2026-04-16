@@ -9,6 +9,7 @@ MCP server that turns Claude Code into a complete content publishing pipeline �
 [![npm version](https://img.shields.io/npm/v/pipepost-mcp)](https://www.npmjs.com/package/pipepost-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/pipepost-mcp)](https://www.npmjs.com/package/pipepost-mcp)
 [![CI](https://img.shields.io/github/actions/workflow/status/MendleM/Pipepost/ci.yml?branch=main&label=CI)](https://github.com/MendleM/Pipepost/actions)
+[![Glama MCP server](https://glama.ai/mcp/servers/MendleM/pipepost/badges/score.svg)](https://glama.ai/mcp/servers/MendleM/pipepost)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
@@ -98,12 +99,14 @@ That's it. Try asking Claude:
 | `generate_social_posts` | Generate platform-optimized posts for Twitter, LinkedIn, Reddit, Bluesky | Credits |
 | `repurpose` | Transform a blog post into Twitter threads, LinkedIn posts, Reddit posts, HN titles, Bluesky posts, newsletter intros | Credits |
 
-### Broadcast (2 tools)
+### Broadcast (4 tools)
 
 | Tool | Description | Cost |
 |------|-------------|------|
-| `bluesky_post` | Post directly to Bluesky as a single post or a threaded series — bare URLs auto-linkified | Free |
+| `bluesky_post` | Post directly to Bluesky as a single post or a threaded series. Bare URLs auto-linkified | Free |
 | `mastodon_post` | Post directly to any Mastodon instance as a single post or a threaded series | Free |
+| `linkedin_post` | Post to LinkedIn (personal). Person URN resolved automatically on first use and cached | Free |
+| `x_post` | Post to X as a single tweet or reply-chained thread. OAuth 1.0a HMAC-SHA1 signing built in | Free |
 
 ### Listening & Reply (4 tools)
 
@@ -208,11 +211,11 @@ Pipepost MCP Server
     |--- SEO Engine (local scoring, meta generation, JSON-LD)
     |--- IndexNow API (Bing, Yandex, search engines)
     |--- Unsplash API (cover images)
-    |--- Dev.to API
-    |--- Ghost Admin API
-    |--- Hashnode GraphQL API
-    |--- WordPress REST API
-    |--- Medium API
+    |--- Dev.to / Ghost / Hashnode / WordPress / Medium APIs
+    |--- Bluesky AT Protocol (post, search, reply)
+    |--- Mastodon API (any instance)
+    |--- LinkedIn /v2/ugcPosts
+    |--- X v2 /tweets (OAuth 1.0a)
 ```
 
 All processing happens locally. Platform APIs are only called when you explicitly publish, fetch analytics, or search for images.
@@ -229,6 +232,8 @@ All processing happens locally. Platform APIs are only called when you explicitl
 | Unsplash | [unsplash.com/developers](https://unsplash.com/developers) |
 | Bluesky | [bsky.app/settings/app-passwords](https://bsky.app/settings/app-passwords) |
 | Mastodon | `https://<your-instance>/settings/applications` (scope: `write:statuses`) |
+| LinkedIn | [linkedin.com/developers/apps](https://www.linkedin.com/developers/apps) (scopes: `openid`, `profile`, `w_member_social`). Run `pnpm linkedin:auth` for the 3-legged flow. |
+| X | [developer.x.com](https://developer.x.com) — OAuth 1.0a app with read+write |
 
 ## Contributing
 
