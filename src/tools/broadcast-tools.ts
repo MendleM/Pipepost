@@ -9,6 +9,9 @@ import {
   replyToBluesky,
 } from "../broadcast/bluesky.js";
 import { postToMastodon, postThreadToMastodon } from "../broadcast/mastodon.js";
+import { postToLinkedIn, fetchPersonUrn } from "../broadcast/linkedin.js";
+import { postToX, postThreadToX } from "../broadcast/x.js";
+import { writeConfig } from "../config.js";
 import { makeError, makeSuccess } from "../errors.js";
 
 /** Zod schema for the `bluesky_post` tool input. */
@@ -111,6 +114,106 @@ export async function handleMastodonPost(
   }
 
   const result = await postToMastodon(input.text!, creds, options);
+  if (!result.success) return result;
+  return makeSuccess({
+    url: result.data.url,
+    id: result.data.id,
+  });
+}
+
+/** Zod schema for the `linkedin_post` tool input. */
+export const linkedinPostSchema = z.object({
+  text: z.string().describe("Post body (<= 3000 chars). LinkedIn has no threading primitive, so only single posts are supported."),
+});
+
+/**
+ * Post directly to LinkedIn as a single feed post.
+ *
+ * Free tool. Requires `social.linkedin.access_token` in config; the app
+ * must have the `w_member_social` scope. If `person_urn` isn't cached we
+ * fetch it from `/v2/userinfo` on first post and persist it so subsequent
+ * calls skip the lookup.
+ */
+export async function handleLinkedInPost(
+  input: z.infer<typeof linkedinPostSchema>
+) {
+  const config = readConfig();
+  const creds = config.social?.linkedin;
+  if (!creds?.access_token) {
+    return makeError(
+      "AUTH_FAILED",
+      'LinkedIn not configured. Run the "setup" tool with platform: "linkedin" and credentials: { access_token, person_urn? }. Token must have the w_member_social scope.'
+    );
+  }
+
+  // If we don't have the person URN cached yet, fetch it once and persist
+  // so subsequent posts skip the /v2/userinfo round trip.
+  let resolved = creds;
+  if (!resolved.person_urn) {
+    const urnResult = await fetchPersonUrn(resolved.access_token);
+    if (!urnResult.success) return urnResult;
+    resolved = { ...resolved, person_urn: urnResult.data };
+    writeConfig({ social: { ...config.social, linkedin: resolved } });
+  }
+
+  const result = await postToLinkedIn(input.text, resolved);
+  if (!result.success) return result;
+
+  return makeSuccess({
+    id: result.data.id,
+    url: result.data.url,
+  });
+}
+
+/** Zod schema for the `x_post` tool input. */
+export const xPostSchema = z.object({
+  text: z.string().optional().describe("Single post text (<= 280 chars). Mutually exclusive with `thread`."),
+  thread: z.array(z.string()).optional().describe("Array of posts to chain as a reply thread. Each <= 280 chars."),
+});
+
+/**
+ * Post directly to X (Twitter).
+ *
+ * Free tool — no credit cost, but X's free API tier caps writes at 17
+ * tweets per 24h per user. Requires `social.x` with OAuth 1.0a credentials
+ * (consumer_key, consumer_secret, access_token, access_token_secret).
+ *
+ * Supports a single post (`text`) or a threaded series (`thread`). Threads
+ * are chained via the v2 `reply.in_reply_to_tweet_id` field.
+ */
+export async function handleXPost(input: z.infer<typeof xPostSchema>) {
+  if (!input.text && (!input.thread || input.thread.length === 0)) {
+    return makeError("VALIDATION_ERROR", "Provide either `text` or `thread`");
+  }
+  if (input.text && input.thread && input.thread.length > 0) {
+    return makeError("VALIDATION_ERROR", "Provide either `text` or `thread`, not both");
+  }
+
+  const config = readConfig();
+  const creds = config.social?.x;
+  if (
+    !creds?.consumer_key ||
+    !creds?.consumer_secret ||
+    !creds?.access_token ||
+    !creds?.access_token_secret
+  ) {
+    return makeError(
+      "AUTH_FAILED",
+      'X not configured. Run the "setup" tool with platform: "x" and OAuth 1.0a credentials: { consumer_key, consumer_secret, access_token, access_token_secret }.'
+    );
+  }
+
+  if (input.thread && input.thread.length > 0) {
+    const result = await postThreadToX(input.thread, creds);
+    if (!result.success) return result;
+    return makeSuccess({
+      posts: result.data.posts,
+      thread_url: result.data.posts[0]?.url,
+      count: result.data.posts.length,
+    });
+  }
+
+  const result = await postToX(input.text!, creds);
   if (!result.success) return result;
   return makeSuccess({
     url: result.data.url,

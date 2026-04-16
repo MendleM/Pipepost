@@ -6,7 +6,7 @@ import { makeError, makeSuccess } from "../errors.js";
 
 /** Zod schema for the `setup` tool input. */
 export const setupSchema = z.object({
-  platform: z.string().describe("Platform to configure: devto, ghost, hashnode, wordpress, medium, twitter, reddit, bluesky, mastodon, unsplash"),
+  platform: z.string().describe("Platform to configure: devto, ghost, hashnode, wordpress, medium, x, linkedin, reddit, bluesky, mastodon, unsplash"),
   credentials: z.record(z.string()).describe("API credentials as key-value pairs"),
 });
 
@@ -79,7 +79,46 @@ export async function handleSetup(input: z.infer<typeof setupSchema>) {
     return makeSuccess({ message: "Mastodon configured successfully", platform: "mastodon" });
   }
 
-  return makeError("VALIDATION_ERROR", `Platform "${platform}" is not supported. Supported: devto, ghost, hashnode, wordpress, medium, unsplash, bluesky, mastodon`);
+  if (platform === "linkedin") {
+    if (!creds.access_token) {
+      return makeError(
+        "VALIDATION_ERROR",
+        "Missing access_token for LinkedIn. Create an app at https://linkedin.com/developers, approve the 'Share on LinkedIn' product, and generate a member access token with the 'w_member_social' scope. Optionally supply person_urn to skip the /v2/userinfo lookup."
+      );
+    }
+    const linkedin: { access_token: string; person_urn?: string } = { access_token: creds.access_token };
+    if (creds.person_urn) linkedin.person_urn = creds.person_urn;
+    writeConfig({ social: { ...config.social, linkedin } });
+    return makeSuccess({ message: "LinkedIn configured successfully", platform: "linkedin" });
+  }
+
+  if (platform === "x" || platform === "twitter") {
+    if (
+      !creds.consumer_key ||
+      !creds.consumer_secret ||
+      !creds.access_token ||
+      !creds.access_token_secret
+    ) {
+      return makeError(
+        "VALIDATION_ERROR",
+        "Missing OAuth 1.0a credentials for X. Create an app at https://developer.twitter.com with read+write permissions, then generate a user access token. Required: consumer_key, consumer_secret, access_token, access_token_secret."
+      );
+    }
+    writeConfig({
+      social: {
+        ...config.social,
+        x: {
+          consumer_key: creds.consumer_key,
+          consumer_secret: creds.consumer_secret,
+          access_token: creds.access_token,
+          access_token_secret: creds.access_token_secret,
+        },
+      },
+    });
+    return makeSuccess({ message: "X configured successfully", platform: "x" });
+  }
+
+  return makeError("VALIDATION_ERROR", `Platform "${platform}" is not supported. Supported: devto, ghost, hashnode, wordpress, medium, unsplash, bluesky, mastodon, linkedin, x`);
 }
 
 /** Zod schema for the `activate` tool input. */

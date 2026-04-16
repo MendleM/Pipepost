@@ -22,9 +22,11 @@ export interface PipepostConfig {
   };
   social?: {
     twitter?: { consumer_key: string; consumer_secret: string; access_token: string; access_token_secret: string };
+    x?: { consumer_key: string; consumer_secret: string; access_token: string; access_token_secret: string };
     reddit?: { client_id: string; client_secret: string; username: string; password: string };
     bluesky?: { handle: string; app_password: string };
     mastodon?: { instance_url: string; access_token: string };
+    linkedin?: { access_token: string; person_urn?: string };
   };
   images?: {
     unsplash_access_key?: string;

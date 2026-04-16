@@ -1,7 +1,7 @@
 {
   "name": "pipepost-mcp",
   "mcpName": "io.github.MendleM/pipepost",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "Publish from your terminal. MCP server for content publishing, SEO, and promotion.",
   "type": "module",
   "bin": {
@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "tsc --noEmit",
+    "linkedin:auth": "node scripts/linkedin-auth.mjs",
     "prepublishOnly": "pnpm run lint && pnpm run test && pnpm run build"
   },
   "keywords": [

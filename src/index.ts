@@ -58,6 +58,8 @@ import {
 import {
   blueskyPostSchema, handleBlueskyPost,
   mastodonPostSchema, handleMastodonPost,
+  linkedinPostSchema, handleLinkedInPost,
+  xPostSchema, handleXPost,
   blueskyMentionsSchema, handleBlueskyMentions,
   blueskySearchSchema, handleBlueskySearch,
   blueskyThreadSchema, handleBlueskyThread,
@@ -97,7 +99,7 @@ import {
 
 const server = new McpServer({
   name: "pipepost",
-  version: "0.7.3",
+  version: "0.8.0",
 });
 
 // SEO Tools
@@ -245,6 +247,18 @@ server.tool("bluesky_post", "Post directly to Bluesky as a single post or a thre
 server.tool("mastodon_post", "Post directly to any Mastodon instance as a single post or a threaded series. Requires instance_url + access_token via setup. FREE — no credit cost.", mastodonPostSchema.shape, async (input) => {
   const parsed = mastodonPostSchema.parse(input);
   const result = await handleMastodonPost(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+server.tool("linkedin_post", "Post directly to LinkedIn as a single feed post (<= 3000 chars). LinkedIn has no threading, so only single posts are supported. Requires access_token (w_member_social scope) via setup. FREE — no credit cost.", linkedinPostSchema.shape, async (input) => {
+  const parsed = linkedinPostSchema.parse(input);
+  const result = await handleLinkedInPost(parsed);
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+server.tool("x_post", "Post directly to X (Twitter) as a single post (<= 280 chars) or a reply-chained thread. Requires OAuth 1.0a credentials via setup. FREE — no credit cost, but X's free API tier caps writes at 17 tweets / 24h.", xPostSchema.shape, async (input) => {
+  const parsed = xPostSchema.parse(input);
+  const result = await handleXPost(parsed);
   return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
 });
 
