@@ -1,7 +1,13 @@
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.MendleM/pipepost",
-  "description": "Publish from your terminal. MCP server that turns Claude Code into a content studio — SEO scoring, multi-platform publishing, and social promotion without leaving the terminal.",
+  "description": "Publish from your terminal: SEO scoring, multi-platform publishing, and social promotion.",
   "version": "0.5.0",
+  "repository": {
+    "url": "https://github.com/MendleM/Pipepost",
+    "source": "github"
+  },
+  "websiteUrl": "https://pipepost.dev",
   "packages": [
     {
       "registryType": "npm",
