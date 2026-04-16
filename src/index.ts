@@ -99,7 +99,7 @@ import {
 
 const server = new McpServer({
   name: "pipepost",
-  version: "0.8.0",
+  version: "0.8.1",
 });
 
 // SEO Tools

@@ -1,8 +1,8 @@
 {
   "name": "pipepost-mcp",
   "mcpName": "io.github.MendleM/pipepost",
-  "version": "0.8.0",
-  "description": "Publish from your terminal. MCP server for content publishing, SEO, and promotion.",
+  "version": "0.8.1",
+  "description": "Open-source MCP server to publish to Dev.to, Ghost, Hashnode, WordPress, Medium, LinkedIn, X, Bluesky, and Mastodon from Claude Code. Local stdio, no cloud relay. Includes SEO scoring, JSON-LD schema, canonical-URL wiring, social-post generation, Unsplash covers, and IndexNow.",
   "type": "module",
   "bin": {
     "pipepost-mcp": "dist/index.js"
@@ -24,12 +24,23 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
     "claude-code",
-    "content",
-    "publishing",
+    "claude",
+    "content-publishing",
+    "cross-posting",
     "seo",
     "devto",
+    "dev-to",
     "ghost",
+    "hashnode",
+    "wordpress",
+    "medium",
+    "linkedin",
+    "bluesky",
+    "mastodon",
+    "indexnow",
     "blog"
   ],
   "homepage": "https://pipepost.dev",
