@@ -19,6 +19,10 @@ MCP server that turns Claude Code into a complete content publishing pipeline �
 
 ---
 
+## See it in one chat turn
+
+[**→ Real agent-loop transcript**](docs/demo/agent-loop.md) — Claude Code takes a draft, audits it, scores SEO, fixes issues, cross-publishes to 5 CMS platforms with canonical URL wiring, generates social promo posts for Twitter/LinkedIn/Bluesky, and submits to IndexNow. One prompt. ~90 seconds. 2 credits.
+
 ## Why Pipepost?
 
 | Task | Without Pipepost | With Pipepost |
