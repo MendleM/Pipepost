@@ -57,7 +57,7 @@ function formatError(toolName: string, result: ToolError): string {
     );
   }
 
-  lines.push("", `*Pipepost v0.4.0 \u00b7 [Docs](https://pipepost.dev/tools)*`);
+  lines.push("", `*Pipepost v0.9.1 \u00b7 [Docs](https://pipepost.dev/tools)*`);
   return lines.join("\n");
 }
 
@@ -574,7 +574,7 @@ export function formatStatus(data: unknown): string {
   return [
     "# Pipepost Status",
     "",
-    field("Version", "0.4.0"),
+    field("Version", "0.9.1"),
     field("License", d.license_status),
     "",
     section(
