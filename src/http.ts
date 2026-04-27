@@ -48,8 +48,13 @@ async function singleRequest(
     const res = await fetch(url, fetchOpts);
 
     if (res.ok) {
-      const data = await res.json();
-      return makeSuccess(data);
+      try {
+        const data = await res.json();
+        return makeSuccess(data);
+      } catch {
+        // Empty body or non-JSON response (e.g. IndexNow returns empty 200/202).
+        return makeSuccess({});
+      }
     }
 
     const text = await res.text();
